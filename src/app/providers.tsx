@@ -4,6 +4,7 @@ import dynamic from 'next/dynamic';
 import { MiniAppProvider } from '@neynar/react';
 import { SafeFarcasterSolanaProvider } from '~/components/providers/SafeFarcasterSolanaProvider';
 import { ANALYTICS_ENABLED, RETURN_URL } from '~/lib/constants';
+import { ToastProvider } from '~/components/ui/Toast';
 
 const WagmiProvider = dynamic(
   () => import('~/components/providers/WagmiProvider'),
@@ -26,9 +27,11 @@ export function Providers({
         backButtonEnabled={true}
         returnUrl={RETURN_URL}
       >
-        <SafeFarcasterSolanaProvider endpoint={solanaEndpoint}>
-          {children}
-        </SafeFarcasterSolanaProvider>
+        <ToastProvider>
+          <SafeFarcasterSolanaProvider endpoint={solanaEndpoint}>
+            {children}
+          </SafeFarcasterSolanaProvider>
+        </ToastProvider>
       </MiniAppProvider>
     </WagmiProvider>
   );

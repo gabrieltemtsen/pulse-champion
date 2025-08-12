@@ -25,15 +25,43 @@
 @tailwind utilities;
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+  /* Pulse Champion Dark Theme */
+  --background: #121217;
+  --foreground: #ffffff;
+  
+  /* Primary gradient colors */
+  --primary: #7F00FF;
+  --primary-mid: #E100FF;
+  --primary-light: #FF61FF;
+  --primary-dark: #5A00B8;
+  
+  /* Secondary accents */
+  --accent-peach: #FF9AA2;
+  --accent-pink: #FFD6E8;
+  
+  /* Glassmorphism colors */
+  --glass-bg: rgba(127, 0, 255, 0.1);
+  --glass-border: rgba(127, 0, 255, 0.2);
+  --glass-shadow: rgba(127, 0, 255, 0.3);
+  
+  /* Neumorphism colors */
+  --neuro-light: rgba(255, 255, 255, 0.1);
+  --neuro-dark: rgba(0, 0, 0, 0.3);
+  --neuro-bg: #1a1a20;
+  
+  /* Gradients */
+  --gradient-primary: linear-gradient(135deg, #7F00FF 0%, #E100FF 50%, #FF61FF 100%);
+  --gradient-secondary: linear-gradient(135deg, #FF9AA2 0%, #FFD6E8 100%);
+  --gradient-pulse: radial-gradient(circle, rgba(127, 0, 255, 0.4) 0%, rgba(127, 0, 255, 0) 70%);
+  
+  /* Animation variables */
+  --pulse-duration: 2s;
+  --glow-intensity: 0 0 20px rgba(127, 0, 255, 0.5);
+  --hover-glow: 0 0 30px rgba(127, 0, 255, 0.7);
+  
+  /* Organic shape variables */
+  --border-radius-organic: 20px;
+  --border-radius-blob: 30% 70% 70% 30% / 30% 30% 70% 70%;
 }
 
 body {
@@ -71,48 +99,225 @@ body {
     @apply mx-auto max-w-sm px-4;
   }
 
-  /* Global card styles */
+  /* Glassmorphic card styles */
   .card {
-    @apply bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 shadow-sm;
+    background: var(--glass-bg);
+    border: 1px solid var(--glass-border);
+    border-radius: var(--border-radius-organic);
+    backdrop-filter: blur(10px);
+    box-shadow: 0 8px 32px 0 var(--glass-shadow);
+    @apply transition-all duration-300 hover:shadow-lg;
   }
   
   .card-primary {
-    @apply bg-primary/10 border-primary/20;
+    background: var(--gradient-primary);
+    border: 1px solid var(--primary-light);
+    box-shadow: var(--glow-intensity);
+  }
+  
+  .card-neuro {
+    background: var(--neuro-bg);
+    border-radius: var(--border-radius-organic);
+    box-shadow: 
+      8px 8px 16px var(--neuro-dark),
+      -8px -8px 16px var(--neuro-light);
+    @apply transition-all duration-300;
+  }
+  
+  .card-neuro:hover {
+    box-shadow: 
+      4px 4px 8px var(--neuro-dark),
+      -4px -4px 8px var(--neuro-light);
+  }
+  
+  .card-floating {
+    @apply card hover:scale-105 hover:-translate-y-1;
   }
 
-  /* Global button styles */
+  /* Organic button styles with pulse effects */
   .btn {
-    @apply inline-flex items-center justify-center rounded-lg px-4 py-2 text-sm font-medium transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 disabled:opacity-50 disabled:pointer-events-none;
+    border-radius: var(--border-radius-organic);
+    @apply inline-flex items-center justify-center px-6 py-3 font-medium transition-all duration-300 focus:outline-none disabled:opacity-50 disabled:pointer-events-none;
   }
   
   .btn-primary {
-    @apply bg-primary text-white hover:bg-primary-dark focus:ring-primary;
+    background: var(--gradient-primary);
+    color: white;
+    border: none;
+    box-shadow: var(--glow-intensity);
+    @apply hover:scale-105 active:scale-95;
+  }
+  
+  .btn-primary:hover {
+    box-shadow: var(--hover-glow);
+  }
+  
+  .btn-pulse {
+    @apply btn-primary relative;
+    animation: pulse-glow var(--pulse-duration) ease-in-out infinite;
+  }
+  
+  .btn-pulse::before {
+    content: '';
+    position: absolute;
+    top: -2px;
+    left: -2px;
+    right: -2px;
+    bottom: -2px;
+    background: var(--gradient-primary);
+    border-radius: var(--border-radius-organic);
+    z-index: -1;
+    opacity: 0;
+    animation: pulse-ring var(--pulse-duration) ease-in-out infinite;
   }
   
   .btn-secondary {
-    @apply bg-secondary text-gray-900 hover:bg-gray-200 focus:ring-gray-500 dark:bg-secondary-dark dark:text-gray-100 dark:hover:bg-gray-600;
+    background: var(--glass-bg);
+    border: 1px solid var(--glass-border);
+    color: var(--foreground);
+    backdrop-filter: blur(10px);
+    @apply hover:scale-105 active:scale-95;
   }
   
-  .btn-outline {
-    @apply border border-gray-300 bg-transparent hover:bg-gray-50 focus:ring-gray-500 dark:border-gray-600 dark:hover:bg-gray-800;
+  .btn-neuro {
+    background: var(--neuro-bg);
+    border: none;
+    color: var(--foreground);
+    box-shadow: 
+      4px 4px 8px var(--neuro-dark),
+      -4px -4px 8px var(--neuro-light);
+    @apply hover:scale-105 active:scale-95;
+  }
+  
+  .btn-neuro:active {
+    box-shadow: 
+      inset 2px 2px 4px var(--neuro-dark),
+      inset -2px -2px 4px var(--neuro-light);
   }
 
-  /* Global input styles */
+  /* Glassmorphic input styles */
   .input {
-    @apply block w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-gray-900 placeholder-gray-500 focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100 dark:placeholder-gray-400;
+    background: var(--glass-bg);
+    border: 1px solid var(--glass-border);
+    border-radius: var(--border-radius-organic);
+    backdrop-filter: blur(10px);
+    color: var(--foreground);
+    @apply block w-full px-4 py-3 placeholder-gray-400 focus:outline-none focus:border-primary-light transition-all duration-300;
+  }
+  
+  .input:focus {
+    box-shadow: var(--glow-intensity);
+    background: rgba(127, 0, 255, 0.15);
   }
 
-  /* Global loading spinner */
+  /* Enhanced loading spinner with glow */
   .spinner {
-    @apply animate-spin rounded-full border-2 border-gray-300 border-t-primary;
+    @apply animate-spin rounded-full border-2 border-transparent;
+    border-top: 2px solid var(--primary);
+    border-right: 2px solid var(--primary-mid);
+    box-shadow: var(--glow-intensity);
   }
   
   .spinner-primary {
-    @apply animate-spin rounded-full border-2 border-white border-t-transparent;
+    @apply animate-spin rounded-full border-2 border-white/20 border-t-white;
   }
 
-  /* Global focus styles */
-  .focus-ring {
-    @apply focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2;
+  /* Radial progress bars */
+  .progress-radial {
+    position: relative;
+    width: 120px;
+    height: 120px;
+    border-radius: 50%;
+    background: conic-gradient(var(--gradient-primary) 0deg, transparent 0deg);
+    @apply flex items-center justify-center;
   }
+  
+  .progress-radial::before {
+    content: '';
+    position: absolute;
+    inset: 8px;
+    border-radius: 50%;
+    background: var(--background);
+  }
+  
+  /* Organic shapes */
+  .blob {
+    border-radius: var(--border-radius-blob);
+    animation: morph 6s ease-in-out infinite;
+  }
+  
+  .glow-effect {
+    box-shadow: var(--glow-intensity);
+    @apply transition-all duration-300;
+  }
+  
+  .glow-effect:hover {
+    box-shadow: var(--hover-glow);
+  }
+
+  /* Enhanced focus styles */
+  .focus-ring {
+    @apply focus:outline-none focus:ring-2 focus:ring-primary-light focus:ring-opacity-50;
+  }
+}
+
+/* Keyframe animations */
+@keyframes pulse-glow {
+  0%, 100% {
+    box-shadow: var(--glow-intensity);
+  }
+  50% {
+    box-shadow: var(--hover-glow);
+  }
+}
+
+@keyframes pulse-ring {
+  0%, 100% {
+    opacity: 0;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.3;
+    transform: scale(1.05);
+  }
+}
+
+@keyframes morph {
+  0%, 100% {
+    border-radius: 30% 70% 70% 30% / 30% 30% 70% 70%;
+  }
+  25% {
+    border-radius: 58% 42% 75% 25% / 76% 46% 54% 24%;
+  }
+  50% {
+    border-radius: 50% 50% 33% 67% / 55% 27% 73% 45%;
+  }
+  75% {
+    border-radius: 33% 67% 58% 42% / 63% 68% 32% 37%;
+  }
+}
+
+@keyframes float {
+  0%, 100% {
+    transform: translateY(0px);
+  }
+  50% {
+    transform: translateY(-10px);
+  }
+}
+
+/* Animated background */
+body::before {
+  content: '';
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: 
+    radial-gradient(circle at 20% 20%, rgba(127, 0, 255, 0.1) 0%, transparent 50%),
+    radial-gradient(circle at 80% 80%, rgba(255, 154, 162, 0.1) 0%, transparent 50%),
+    radial-gradient(circle at 40% 60%, rgba(225, 0, 255, 0.05) 0%, transparent 50%);
+  z-index: -1;
+  animation: float 8s ease-in-out infinite;
 }

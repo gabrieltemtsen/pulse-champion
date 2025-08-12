@@ -4,50 +4,102 @@ import { Tab } from "~/components/App";
 interface FooterProps {
   activeTab: Tab;
   setActiveTab: (tab: Tab) => void;
-  showWallet?: boolean;
 }
 
-export const Footer: React.FC<FooterProps> = ({ activeTab, setActiveTab, showWallet = false }) => (
-  <div className="fixed bottom-0 left-0 right-0 mx-4 mb-4 bg-gray-100 dark:bg-gray-800 border-[3px] border-double border-primary px-2 py-2 rounded-lg z-50">
-    <div className="flex justify-around items-center h-14">
-      <button
-        onClick={() => setActiveTab(Tab.Home)}
-        className={`flex flex-col items-center justify-center w-full h-full ${
-          activeTab === Tab.Home ? 'text-primary dark:text-primary-light' : 'text-gray-500 dark:text-gray-400'
-        }`}
-      >
-        <span className="text-xl">🏠</span>
-        <span className="text-xs mt-1">Home</span>
-      </button>
-      <button
-        onClick={() => setActiveTab(Tab.Actions)}
-        className={`flex flex-col items-center justify-center w-full h-full ${
-          activeTab === Tab.Actions ? 'text-primary dark:text-primary-light' : 'text-gray-500 dark:text-gray-400'
-        }`}
-      >
-        <span className="text-xl">⚡</span>
-        <span className="text-xs mt-1">Actions</span>
-      </button>
-      <button
-        onClick={() => setActiveTab(Tab.Context)}
-        className={`flex flex-col items-center justify-center w-full h-full ${
-          activeTab === Tab.Context ? 'text-primary dark:text-primary-light' : 'text-gray-500 dark:text-gray-400'
-        }`}
-      >
-        <span className="text-xl">📋</span>
-        <span className="text-xs mt-1">Context</span>
-      </button>
-      {showWallet && (
-        <button
-          onClick={() => setActiveTab(Tab.Wallet)}
-          className={`flex flex-col items-center justify-center w-full h-full ${
-            activeTab === Tab.Wallet ? 'text-primary dark:text-primary-light' : 'text-gray-500 dark:text-gray-400'
-          }`}
-        >
-          <span className="text-xl">👛</span>
-          <span className="text-xs mt-1">Wallet</span>
-        </button>
-      )}
+export const Footer: React.FC<FooterProps> = ({ activeTab, setActiveTab }) => (
+  <nav
+    className="fixed bottom-0 left-0 right-0 z-50"
+    aria-label="Primary"
+    style={{ paddingBottom: 'calc(env(safe-area-inset-bottom) + 0.25rem)' }}
+  >
+    <div className="mx-4 mb-3 card glow-effect">
+      <ul className="grid grid-cols-5 gap-1 items-center h-14" role="tablist">
+        <li>
+          <button
+            type="button"
+            onClick={() => setActiveTab(Tab.Dashboard)}
+            className={`flex flex-col items-center justify-center w-full h-full focus-ring rounded-md transition-all duration-300 ${
+              activeTab === Tab.Dashboard 
+                ? 'text-white bg-gradient-to-r from-purple-500 to-pink-500 shadow-lg transform scale-105 glow-effect' 
+                : 'text-gray-300 hover:text-white hover:bg-white/10'
+            }`}
+            role="tab"
+            aria-selected={activeTab === Tab.Dashboard}
+            aria-current={activeTab === Tab.Dashboard ? 'page' : undefined}
+          >
+            <span className="text-xl" aria-hidden>📊</span>
+            <span className="text-[10px] mt-1">Home</span>
+          </button>
+        </li>
+        <li>
+          <button
+            type="button"
+            onClick={() => setActiveTab(Tab.Leaderboard)}
+            className={`flex flex-col items-center justify-center w-full h-full focus-ring rounded-md transition-all duration-300 ${
+              activeTab === Tab.Leaderboard 
+                ? 'text-white bg-gradient-to-r from-purple-500 to-pink-500 shadow-lg transform scale-105 glow-effect' 
+                : 'text-gray-300 hover:text-white hover:bg-white/10'
+            }`}
+            role="tab"
+            aria-selected={activeTab === Tab.Leaderboard}
+            aria-current={activeTab === Tab.Leaderboard ? 'page' : undefined}
+          >
+            <span className="text-xl" aria-hidden>🏆</span>
+            <span className="text-[10px] mt-1">Leaders</span>
+          </button>
+        </li>
+        <li>
+          <button
+            type="button"
+            onClick={() => setActiveTab(Tab.Rounds)}
+            className={`flex flex-col items-center justify-center w-full h-full focus-ring rounded-md transition-all duration-300 ${
+              activeTab === Tab.Rounds 
+                ? 'text-white bg-gradient-to-r from-purple-500 to-pink-500 shadow-lg transform scale-105 glow-effect' 
+                : 'text-gray-300 hover:text-white hover:bg-white/10'
+            }`}
+            role="tab"
+            aria-selected={activeTab === Tab.Rounds}
+            aria-current={activeTab === Tab.Rounds ? 'page' : undefined}
+          >
+            <span className="text-xl" aria-hidden>⏱️</span>
+            <span className="text-[10px] mt-1">Rounds</span>
+          </button>
+        </li>
+        <li>
+          <button
+            type="button"
+            onClick={() => setActiveTab(Tab.Rewards)}
+            className={`flex flex-col items-center justify-center w-full h-full focus-ring rounded-md transition-all duration-300 ${
+              activeTab === Tab.Rewards 
+                ? 'text-white bg-gradient-to-r from-purple-500 to-pink-500 shadow-lg transform scale-105 glow-effect' 
+                : 'text-gray-300 hover:text-white hover:bg-white/10'
+            }`}
+            role="tab"
+            aria-selected={activeTab === Tab.Rewards}
+            aria-current={activeTab === Tab.Rewards ? 'page' : undefined}
+          >
+            <span className="text-xl" aria-hidden>🎁</span>
+            <span className="text-[10px] mt-1">Rewards</span>
+          </button>
+        </li>
+        <li>
+          <button
+            type="button"
+            onClick={() => setActiveTab(Tab.Profile)}
+            className={`flex flex-col items-center justify-center w-full h-full focus-ring rounded-md transition-all duration-300 ${
+              activeTab === Tab.Profile 
+                ? 'text-white bg-gradient-to-r from-purple-500 to-pink-500 shadow-lg transform scale-105 glow-effect' 
+                : 'text-gray-300 hover:text-white hover:bg-white/10'
+            }`}
+            role="tab"
+            aria-selected={activeTab === Tab.Profile}
+            aria-current={activeTab === Tab.Profile ? 'page' : undefined}
+          >
+            <span className="text-xl" aria-hidden>👤</span>
+            <span className="text-[10px] mt-1">Profile</span>
+          </button>
+        </li>
+      </ul>
     </div>
-  </div>
+  </nav>
 );

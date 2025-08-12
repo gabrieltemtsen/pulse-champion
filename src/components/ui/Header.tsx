@@ -18,59 +18,45 @@ export function Header({ neynarUser }: HeaderProps) {
 
   return (
     <div className="relative">
-      <div 
-        className="mt-4 mb-4 mx-4 px-2 py-2 bg-gray-100 dark:bg-gray-800 rounded-lg flex items-center justify-between border-[3px] border-double border-primary"
-      >
-        <div className="text-lg font-light">
-          Welcome to {APP_NAME}!
+      <div className="sticky top-0 z-30 mx-4 mt-3 mb-2">
+        <div className="card backdrop-blur supports-[backdrop-filter]:backdrop-blur bg-white/70 dark:bg-gray-900/50 border-primary/30 flex items-center justify-between px-3 py-2">
+          <div className="text-base font-semibold tracking-tight">{APP_NAME}</div>
+          {context?.user && (
+            <button
+              type="button"
+              className="cursor-pointer focus-ring rounded-full"
+              onClick={() => setIsUserDropdownOpen(!isUserDropdownOpen)}
+              aria-haspopup="menu"
+              aria-expanded={isUserDropdownOpen}
+              aria-label="Open profile menu"
+            >
+              {context.user.pfpUrl && (
+                <img
+                  src={context.user.pfpUrl}
+                  alt="Profile"
+                  className="w-9 h-9 rounded-full border-2 border-primary/60 shadow-sm"
+                />
+              )}
+            </button>
+          )}
         </div>
-        {context?.user && (
-          <div 
-            className="cursor-pointer"
-            onClick={() => {
-              setIsUserDropdownOpen(!isUserDropdownOpen);
-            }}
-          >
-            {context.user.pfpUrl && (
-              <img 
-                src={context.user.pfpUrl} 
-                alt="Profile" 
-                className="w-10 h-10 rounded-full border-2 border-primary"
-              />
+      </div>
+      {context?.user && isUserDropdownOpen && (
+        <div className="absolute top-full right-4 z-50 w-fit mt-1 bg-white/95 dark:bg-gray-800/95 rounded-lg shadow-lg border border-gray-200/60 dark:border-gray-700/60 backdrop-blur supports-[backdrop-filter]:backdrop-blur-sm">
+          <div className="p-3 space-y-2 text-right">
+            <h3
+              className="font-bold text-sm hover:underline cursor-pointer inline-block"
+              onClick={() => sdk.actions.viewProfile({ fid: context.user.fid })}
+            >
+              {context.user.displayName || context.user.username}
+            </h3>
+            <p className="text-xs text-gray-600 dark:text-gray-400">@{context.user.username}</p>
+            <p className="text-xs text-gray-500 dark:text-gray-500">FID: {context.user.fid}</p>
+            {neynarUser && (
+              <p className="text-xs text-gray-500 dark:text-gray-500">Neynar Score: {neynarUser.score}</p>
             )}
           </div>
-        )}
-      </div>
-      {context?.user && (
-        <>      
-          {isUserDropdownOpen && (
-            <div className="absolute top-full right-0 z-50 w-fit mt-1 mx-4 bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-200 dark:border-gray-700">
-              <div className="p-3 space-y-2">
-                <div className="text-right">
-                  <h3 
-                    className="font-bold text-sm hover:underline cursor-pointer inline-block"
-                    onClick={() => sdk.actions.viewProfile({ fid: context.user.fid })}
-                  >
-                    {context.user.displayName || context.user.username}
-                  </h3>
-                  <p className="text-xs text-gray-600 dark:text-gray-400">
-                    @{context.user.username}
-                  </p>
-                  <p className="text-xs text-gray-500 dark:text-gray-500">
-                    FID: {context.user.fid}
-                  </p>
-                  {neynarUser && (
-                    <>
-                      <p className="text-xs text-gray-500 dark:text-gray-500">
-                        Neynar Score: {neynarUser.score}
-                      </p>
-                    </>
-                  )}
-                </div>
-              </div>
-            </div>
-          )}
-        </>
+        </div>
       )}
     </div>
   );

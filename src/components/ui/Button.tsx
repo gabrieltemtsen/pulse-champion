@@ -1,7 +1,7 @@
 interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
   children: React.ReactNode;
   isLoading?: boolean;
-  variant?: 'primary' | 'secondary' | 'outline';
+  variant?: 'primary' | 'secondary' | 'outline' | 'pulse' | 'neuro';
   size?: 'sm' | 'md' | 'lg';
 }
 
@@ -18,7 +18,9 @@ export function Button({
   const variantClasses = {
     primary: "btn-primary",
     secondary: "btn-secondary", 
-    outline: "btn-outline"
+    outline: "btn-outline",
+    pulse: "btn-pulse",
+    neuro: "btn-neuro"
   };
   
   const sizeClasses = {
