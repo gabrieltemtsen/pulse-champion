@@ -1,5 +1,13 @@
 import { type AccountAssociation } from '@farcaster/miniapp-core/src/manifest';
 
+const NEXT_PUBLIC_ACCOUNT_ASSOCIATION = {
+  "accountAssociation": {
+    "header": "eyJmaWQiOjQyMDU2NCwidHlwZSI6ImF1dGgiLCJrZXkiOiIweGJFOTViYjQ3Nzg5RTVmNEFmNDY3MzA2Qzk3REVEMDg3N0JGODE3QjUifQ",
+    "payload": "eyJkb21haW4iOiJwdWxzZS1jaGFtcGlvbi52ZXJjZWwuYXBwIn0",
+    "signature": "saz9ZHyO210yl06tH/4jlVYza1rGHUZIKRJt5XYjw+g8EdfuHi5XXnqYdryetMYCSMHJEVBsMnagN170GEWT+xw="
+  }
+}
+
 /**
  * Application constants and configuration values.
  *
@@ -73,7 +81,7 @@ export const APP_SPLASH_BACKGROUND_COLOR: string = '#f7f7f7';
  * If not provided, the mini app will be unsigned and have limited capabilities.
  */
 export const APP_ACCOUNT_ASSOCIATION: AccountAssociation | undefined =
-  undefined;
+  NEXT_PUBLIC_ACCOUNT_ASSOCIATION.accountAssociation as AccountAssociation | undefined;
 
 // --- UI Configuration ---
 /**
