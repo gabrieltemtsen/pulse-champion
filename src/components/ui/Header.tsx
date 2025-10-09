@@ -4,6 +4,7 @@ import { useState } from "react";
 import { APP_NAME } from "~/lib/constants";
 import sdk from "@farcaster/miniapp-sdk";
 import { useMiniApp } from "@neynar/react";
+import { useMode } from "~/components/providers/ModeProvider";
 
 type HeaderProps = {
   neynarUser?: {
@@ -15,12 +16,33 @@ type HeaderProps = {
 export function Header({ neynarUser }: HeaderProps) {
   const { context } = useMiniApp();
   const [isUserDropdownOpen, setIsUserDropdownOpen] = useState(false);
+  const { mode, setMode } = useMode();
 
   return (
     <div className="relative">
       <div className="sticky top-0 z-30 mx-4 mt-3 mb-2">
         <div className="card backdrop-blur supports-[backdrop-filter]:backdrop-blur bg-white/70 dark:bg-gray-900/50 border-primary/30 flex items-center justify-between px-3 py-2">
           <div className="text-base font-semibold tracking-tight">{APP_NAME}</div>
+          {/* Mode Toggle */}
+          <div className="flex items-center gap-2">
+            <div className="mode-toggle flex items-center border border-black/20 dark:border-white/20">
+              <button
+                type="button"
+                onClick={() => setMode("base")}
+                className={`px-3 py-1 text-xs font-semibold tracking-wide uppercase ${mode === "base" ? "bg-black text-white" : "bg-transparent text-current"}`}
+                aria-pressed={mode === "base"}
+              >
+                Base
+              </button>
+              <button
+                type="button"
+                onClick={() => setMode("celo")}
+                className={`px-3 py-1 text-xs font-semibold tracking-wide uppercase border-l border-black/20 dark:border-white/20 ${mode === "celo" ? "bg-[#FCFF52] text-black" : "bg-transparent text-current"}`}
+                aria-pressed={mode === "celo"}
+              >
+                Celo
+              </button>
+            </div>
           {context?.user && (
             <button
               type="button"
@@ -39,6 +61,7 @@ export function Header({ neynarUser }: HeaderProps) {
               )}
             </button>
           )}
+          </div>
         </div>
       </div>
       {context?.user && isUserDropdownOpen && (

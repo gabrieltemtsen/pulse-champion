@@ -3,7 +3,8 @@
 import { useCallback, useMemo, useState, useEffect } from "react";
 import { useAccount, useSendTransaction, useSignTypedData, useWaitForTransactionReceipt, useDisconnect, useConnect, useSwitchChain, useChainId, type Connector } from "wagmi";
 import { useWallet as useSolanaWallet } from '@solana/wallet-adapter-react';
-import { base, degen, mainnet, optimism, unichain } from "wagmi/chains";
+import { base, degen, mainnet, optimism, unichain, celo } from "wagmi/chains";
+import { useMode } from "~/components/providers/ModeProvider";
 import { Button } from "../Button";
 import { truncateAddress } from "../../../lib/truncateAddress";
 import { renderError } from "../../../lib/errorUtils";
@@ -65,7 +66,7 @@ interface ConnectionControlsProps {
     user?: { fid?: number };
     client?: unknown;
   } | null;
-  connect: (args: { connector: Connector }) => void;
+  connect: (args: { connector: Connector; chainId?: number }) => void;
   connectors: readonly Connector[];
   disconnect: () => void;
 }
@@ -80,6 +81,8 @@ function ConnectionControls({
   connectors,
   disconnect,
 }: ConnectionControlsProps) {
+  const { mode } = useMode();
+  const targetChainId = mode === "celo" ? celo.id : base.id;
   if (isConnected) {
     return (
       <Button onClick={() => disconnect()} className="w-full">
@@ -90,14 +93,14 @@ function ConnectionControls({
   if (context) {
     return (
       <div className="space-y-2 w-full">
-        <Button onClick={() => connect({ connector: connectors[0] })} className="w-full">
+        <Button onClick={() => connect({ connector: connectors[0], chainId: targetChainId })} className="w-full">
           Connect (Auto)
         </Button>
         <Button
           onClick={() => {
             console.log("Manual Farcaster connection attempt");
             console.log("Connectors:", connectors.map((c, i) => `${i}: ${c.name}`));
-            connect({ connector: connectors[0] });
+            connect({ connector: connectors[0], chainId: targetChainId });
           }}
           className="w-full"
         >
@@ -108,10 +111,10 @@ function ConnectionControls({
   }
   return (
     <div className="space-y-3 w-full">
-      <Button onClick={() => connect({ connector: connectors[1] })} className="w-full">
+      <Button onClick={() => connect({ connector: connectors[1], chainId: targetChainId })} className="w-full">
         Connect Coinbase Wallet
       </Button>
-      <Button onClick={() => connect({ connector: connectors[2] })} className="w-full">
+      <Button onClick={() => connect({ connector: connectors[2], chainId: targetChainId })} className="w-full">
         Connect MetaMask
       </Button>
     </div>
@@ -126,6 +129,7 @@ export function WalletTab() {
   const { context } = useMiniApp();
   const { address, isConnected } = useAccount();
   const chainId = useChainId();
+  const { mode } = useMode();
   const solanaWallet = useSolanaWallet();
   const { publicKey: solanaPublicKey } = solanaWallet;
 
@@ -199,22 +203,19 @@ export function WalletTab() {
 
   // --- Computed Values ---
   /**
-   * Determines the next chain to switch to based on the current chain.
-   * Cycles through: Base → Optimism → Degen → Mainnet → Unichain → Base
+   * Prefer switching to the selected mode's chain.
+   * If already on it, fall back to legacy rotation.
    */
   const nextChain = useMemo(() => {
-    if (chainId === base.id) {
-      return optimism;
-    } else if (chainId === optimism.id) {
-      return degen;
-    } else if (chainId === degen.id) {
-      return mainnet;
-    } else if (chainId === mainnet.id) {
-      return unichain;
-    } else {
-      return base;
-    }
-  }, [chainId]);
+    const cid = Number(chainId);
+    if (mode === "celo" && cid !== celo.id) return celo;
+    if (mode === "base" && cid !== base.id) return base;
+    if (cid === base.id) return optimism;
+    if (cid === optimism.id) return degen;
+    if (cid === degen.id) return mainnet;
+    if (cid === mainnet.id) return unichain;
+    return base;
+  }, [chainId, mode]);
 
   // --- Handlers ---
   /**
@@ -326,14 +327,16 @@ export function WalletTab() {
             Sign Typed Data
           </Button>
           {isEvmSignTypedDataError && renderError(evmSignTypedDataError)}
-          <Button
-            onClick={handleSwitchChain}
-            disabled={isChainSwitchPending}
-            isLoading={isChainSwitchPending}
-            className="w-full"
-          >
-            Switch to {nextChain.name}
-          </Button>
+          {Number(chainId) !== nextChain.id && (
+            <Button
+              onClick={handleSwitchChain}
+              disabled={isChainSwitchPending}
+              isLoading={isChainSwitchPending}
+              className="w-full"
+            >
+              Switch to {nextChain.name}
+            </Button>
+          )}
           {isChainSwitchError && renderError(chainSwitchError)}
         </>
       )}

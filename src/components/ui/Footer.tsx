@@ -12,8 +12,8 @@ export const Footer: React.FC<FooterProps> = ({ activeTab, setActiveTab }) => (
     aria-label="Primary"
     style={{ paddingBottom: 'calc(env(safe-area-inset-bottom) + 0.25rem)' }}
   >
-    <div className="mx-4 mb-3 card glow-effect">
-      <ul className="grid grid-cols-5 gap-1 items-center h-14" role="tablist">
+    <div className="mx-4 mb-3 card glow-effect footer-wrap">
+      <ul className="grid grid-cols-5 gap-1 items-center h-14 footer-nav" role="tablist">
         <li>
           <button
             type="button"

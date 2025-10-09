@@ -321,3 +321,114 @@ body::before {
   z-index: -1;
   animation: float 8s ease-in-out infinite;
 }
+
+/* =====================
+   CELO MODE OVERRIDES
+   ===================== */
+html.mode-celo {
+  /* Celo Dark: professional, high-contrast, brand-forward */
+  --background: #1A0329;          /* deep purple background */
+  --surface: #13021F;             /* dark surface */
+  --surface-muted: #0E0718;       /* input/secondary surface */
+  --foreground: #FFFFFF;          /* main text */
+  --muted: #E6E3D5;               /* muted text */
+
+  --accent-yellow: #FCFF52;       /* brand yellow */
+  --accent-primary: #4E632A;      /* forest green */
+  --accent-secondary: #8AC0F9;    /* light blue (small punches) */
+
+  /* map to system vars */
+  --primary: var(--accent-yellow);
+  --primary-mid: var(--accent-primary);
+  --primary-light: var(--accent-secondary);
+  --primary-dark: #000000;
+
+  --glass-bg: rgba(0,0,0,0);
+  --glass-border: rgba(255,255,255,0.08);
+  --glass-shadow: rgba(0,0,0,0);
+  --neuro-bg: var(--surface);
+  --neuro-light: rgba(255,255,255,0.08);
+  --neuro-dark: rgba(0,0,0,0.4);
+
+  --border-radius-organic: 0px;
+}
+
+/* Kill animated background in Celo mode */
+html.mode-celo body::before { display: none; }
+
+/* Typography dominance */
+html.mode-celo body { font-family: 'Inter', Helvetica, Arial, sans-serif; color: var(--foreground); background: var(--background); }
+html.mode-celo h1, html.mode-celo h2, html.mode-celo h3, html.mode-celo h4 {
+  font-family: 'GT Alpina', Georgia, 'Times New Roman', serif;
+  font-weight: 300; /* thin headline */
+  letter-spacing: -0.02em;
+  text-transform: none;
+}
+html.mode-celo h1 { font-size: 2.2rem; line-height: 1.05; }
+html.mode-celo h2 { font-size: 1.8rem; line-height: 1.1; }
+
+/* Blocks and outlines */
+html.mode-celo .card { background: var(--surface); border: 1px solid rgba(255,255,255,0.08); border-radius: 0; box-shadow: none; backdrop-filter: none; color: var(--foreground); }
+html.mode-celo .card-primary { background: var(--surface); border: 1px solid rgba(255,255,255,0.08); box-shadow: none; border-left: 3px solid var(--accent-yellow); }
+html.mode-celo .card-neuro { background: var(--surface); border-radius: 0; border: 1px solid rgba(255,255,255,0.08); box-shadow: none; }
+html.mode-celo .card-floating { transform: none !important; }
+
+/* Buttons: rectangular, bold inversion on hover */
+html.mode-celo .btn { border-radius: 0; border: 1px solid rgba(255,255,255,0.12); box-shadow: none; background: var(--surface); color: var(--foreground); }
+html.mode-celo .btn:hover { background: #1C0A24; }
+html.mode-celo .btn-primary { background: var(--accent-yellow); border-color: var(--accent-yellow); color: #000; }
+html.mode-celo .btn-primary:hover { background: #000; color: var(--accent-yellow); }
+html.mode-celo .btn-secondary { background: var(--accent-primary); color: #fff; border-color: var(--accent-primary); }
+html.mode-celo .btn-secondary:hover { background: transparent; color: var(--accent-primary); }
+html.mode-celo .btn-neuro { background: var(--surface); color: var(--foreground); }
+html.mode-celo .btn-neuro:active { box-shadow: none; }
+
+/* Inputs: sharp, signage-like */
+html.mode-celo .input { background: var(--surface-muted); border: 1px solid rgba(255,255,255,0.14); border-radius: 0; color: var(--foreground); }
+html.mode-celo .input:focus {
+  outline: 2px solid var(--accent-yellow);
+  box-shadow: none;
+}
+
+/* Spinners: stark */
+html.mode-celo .spinner { border: 2px solid transparent; border-top: 2px solid var(--accent-yellow); border-right: 2px solid var(--accent-primary); box-shadow: none; }
+
+/* Footer nav overrides: rectangular, high-contrast, no gradients */
+html.mode-celo .footer-wrap { border-top: 1px solid rgba(255,255,255,0.08); background: var(--surface); }
+html.mode-celo .footer-nav button { border-radius: 0 !important; border: none; box-shadow: none !important; transform: none !important; background: transparent; color: var(--muted); }
+html.mode-celo .footer-nav button:hover { background: rgba(255,255,255,0.04); }
+html.mode-celo .footer-nav button[aria-selected="true"] { color: #000 !important; background: var(--accent-yellow) !important; }
+html.mode-celo .footer-nav span { color: inherit !important; }
+
+/* Top summary bar: enforce blocky card-primary */
+html.mode-celo .card.card-primary { background: var(--surface) !important; border: 1px solid rgba(255,255,255,0.08) !important; border-left: 3px solid var(--accent-yellow) !important; }
+html.mode-celo .card.card-primary * { color: var(--foreground) !important; }
+
+/* Header card: remove translucency */
+html.mode-celo .card.bg-white\/70 { background: var(--surface) !important; border-color: rgba(255,255,255,0.08) !important; }
+html.mode-celo .card { background-clip: border-box; }
+
+/* Remove backdrop blur utilities in Celo */
+html.mode-celo .backdrop-blur, 
+html.mode-celo .supports-[backdrop-filter]:backdrop-blur, 
+html.mode-celo [class*="backdrop-blur"] {
+  backdrop-filter: none !important;
+}
+
+/* Remove gradients and rounding in Celo for a stark look */
+html.mode-celo [class*="bg-gradient-to-"] { background: transparent !important; }
+html.mode-celo .glow-effect { box-shadow: none !important; }
+
+/* Mode toggle styles */
+html.mode-celo .mode-toggle { border: 1px solid rgba(255,255,255,0.12) !important; background: var(--surface); }
+html.mode-celo .mode-toggle button { border-radius: 0 !important; border-right: 1px solid rgba(255,255,255,0.12); color: var(--muted); }
+html.mode-celo .mode-toggle button:last-child { border-right: 0; }
+html.mode-celo .mode-toggle button[aria-pressed="true"] { background: var(--accent-yellow); color: #000; }
+
+/* Fix gray utility classes on dark */
+html.mode-celo .text-gray-500, html.mode-celo .dark\:text-gray-500,
+html.mode-celo .text-gray-600, html.mode-celo .dark\:text-gray-600,
+html.mode-celo .text-gray-400, html.mode-celo .dark\:text-gray-400,
+html.mode-celo .text-gray-300, html.mode-celo .dark\:text-gray-300 {
+  color: var(--muted) !important;
+}

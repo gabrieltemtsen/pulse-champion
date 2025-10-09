@@ -2,11 +2,12 @@
 
 import { useCallback } from "react";
 import { useAccount, useConnect, useSignMessage } from "wagmi";
-import { base } from "wagmi/chains";
+import { base, celo } from "wagmi/chains";
 import { Button } from "../Button";
 import { config } from "../../providers/WagmiProvider";
 import { APP_NAME } from "../../../lib/constants";
 import { renderError } from "../../../lib/errorUtils";
+import { useMode } from "~/components/providers/ModeProvider";
 
 /**
  * SignEvmMessage component handles signing messages on EVM-compatible chains.
@@ -30,6 +31,7 @@ export function SignEvmMessage() {
   // --- Hooks ---
   const { isConnected } = useAccount();
   const { connectAsync } = useConnect();
+  const { mode } = useMode();
   const {
     signMessage,
     data: evmMessageSignature,
@@ -52,13 +54,13 @@ export function SignEvmMessage() {
   const signEvmMessage = useCallback(async () => {
     if (!isConnected) {
       await connectAsync({
-        chainId: base.id,
+        chainId: mode === "celo" ? celo.id : base.id,
         connector: config.connectors[0],
       });
     }
 
     signMessage({ message: `Hello from ${APP_NAME}!` });
-  }, [connectAsync, isConnected, signMessage]);
+  }, [connectAsync, isConnected, signMessage, mode]);
 
   // --- Render ---
   return (

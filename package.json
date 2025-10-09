@@ -17,6 +17,11 @@
     "build:raw": "next build",
     "start": "next start",
     "lint": "next lint",
+    "hh": "hardhat",
+    "hh:compile": "hardhat compile",
+    "hh:clean": "hardhat clean",
+    "hh:deploy:base": "hardhat run scripts/deploy.ts --network base",
+    "hh:deploy:celo": "hardhat run scripts/deploy.ts --network celo",
     "deploy:vercel": "node --loader ts-node/esm scripts/deploy.ts",
     "deploy:raw": "vercel --prod",
     "cleanup": "node scripts/cleanup.js"
