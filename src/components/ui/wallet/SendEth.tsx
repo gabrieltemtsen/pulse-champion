@@ -4,6 +4,7 @@ import { useCallback, useMemo } from "react";
 import { useAccount, useSendTransaction, useWaitForTransactionReceipt } from "wagmi";
 import { base } from "wagmi/chains";
 import { Button } from "../Button";
+import { useMode } from "~/components/providers/ModeProvider";
 import { truncateAddress } from "../../../lib/truncateAddress";
 import { renderError } from "../../../lib/errorUtils";
 
@@ -40,6 +41,7 @@ export function SendEth() {
     useWaitForTransactionReceipt({
       hash: ethTransactionHash,
     });
+  const { mode } = useMode();
 
   // --- Computed Values ---
   /**
@@ -81,7 +83,7 @@ export function SendEth() {
         disabled={!isConnected || isEthTransactionPending}
         isLoading={isEthTransactionPending}
       >
-        Send Transaction (eth)
+        {mode === "celo" ? "Send Transaction (CELO)" : "Send Transaction (ETH)"}
       </Button>
       {isEthTransactionError && renderError(ethTransactionError)}
       {ethTransactionHash && (

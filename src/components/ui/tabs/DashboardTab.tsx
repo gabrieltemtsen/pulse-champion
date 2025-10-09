@@ -1,11 +1,13 @@
 "use client";
 
-import { useCallback, useMemo, useState } from "react";
-import { useMiniApp } from "@neynar/react";
+import { useState } from "react";
 import { Button } from "../Button";
-import { useGameState, useLeaderboard } from "~/hooks/useGameData";
 import { useToast } from "~/components/ui/Toast";
 import { AnimatedNumber } from "~/components/ui/AnimatedNumber";
+import { useChampionGame } from "~/hooks/useChampionGame";
+import { useAccount } from "wagmi";
+import { useMode } from "~/components/providers/ModeProvider";
+import { parseEther } from "viem";
 
 function msToHMS(ms: number) {
   const total = Math.floor(ms / 1000);
@@ -17,132 +19,129 @@ function msToHMS(ms: number) {
 }
 
 export function DashboardTab() {
-  const { context } = useMiniApp();
-  const meFid = context?.user?.fid;
-  const { round, timeLeft, progress, me, setMe, error } = useGameState(meFid);
-  const { meRank } = useLeaderboard(meFid);
-  const [playBusy, setPlayBusy] = useState(false);
-  const [playMsg, setPlayMsg] = useState<string | null>(null);
+  const { mode } = useMode();
+  const { address, isConnected } = useAccount();
   const { addSuccess, addError } = useToast();
-
-  const timeStr = useMemo(() => msToHMS(timeLeft), [timeLeft]);
-
-  const onPlay = useCallback(async () => {
-    if (playBusy) return;
-    setPlayBusy(true);
-    setPlayMsg(null);
-    try {
-      // Simulated play() call
-      await new Promise((res) => setTimeout(res, 900));
-      setMe((prev) => (prev ? { ...prev, points: prev.points + 10 } : prev));
-      setPlayMsg("Play successful! +10 points");
-      addSuccess("+10 points added!", { title: "Nice!" });
-    } catch (e: any) {
-      const msg = e?.message || "Play failed. Try again.";
-      setPlayMsg(msg);
-      addError(msg, { title: "Action failed" });
-    } finally {
-      setPlayBusy(false);
-      setTimeout(() => setPlayMsg(null), 2000);
-    }
-  }, [playBusy, setMe, addSuccess, addError]);
+  const {
+    desiredChain,
+    onDesiredChain,
+    gameAddress,
+    isOwner,
+    currentRoundId,
+    startTime,
+    endTime,
+    prizePool,
+    topPlayers,
+    topScores,
+    settled,
+    myScore,
+    isPending,
+    work,
+    fund,
+    startRound,
+    settleRound,
+  } = useChampionGame();
+  const [fundAmount, setFundAmount] = useState<string>("0.01");
 
   return (
     <div className="space-y-6 px-4">
-      {/* Main Round Card with Circular Progress */}
-      <div className="card-floating p-6 relative">
-        <div className="flex items-start justify-between mb-6">
+      {/* On-chain Overview */}
+      <div className="card-floating p-6">
+        <div className="flex items-start justify-between">
           <div>
-            <h3 className="text-xl font-bold text-white">Current Round</h3>
-            <p className="text-sm text-gray-300 mt-1">ID #{round.id}</p>
+            <h3 className="text-xl font-bold">Pulse Champion</h3>
+            <p className="text-sm opacity-75 mt-1">Mode: {mode} • Chain ID: {desiredChain.id} • Round: {currentRoundId ? Number(currentRoundId) : '—'}</p>
+          </div>
+          {!onDesiredChain && (
+            <div className="text-xs text-red-400">Switch to {desiredChain.name} to interact</div>
+          )}
+        </div>
+        <div className="grid grid-cols-2 gap-4 mt-6">
+          <div className="card-neuro p-4 text-center">
+            <p className="text-sm opacity-75 mb-2">My Score (round)</p>
+            <AnimatedNumber className="text-2xl font-bold" value={Number(myScore)} />
+          </div>
+          <div className="card-neuro p-4 text-center">
+            <p className="text-sm opacity-75 mb-2">Contract</p>
+            <p className="text-xs break-all opacity-80">{gameAddress ?? 'not set'}</p>
+          </div>
+        </div>
+      </div>
+
+      {/* Round Controls + Work/Fund */}
+      <div className="card p-6 space-y-4">
+        <div className="flex items-center justify-between">
+          <div>
+            <p className="text-sm opacity-75">Prize Pool</p>
+            <p className="text-xl font-bold">{prizePool ? String(prizePool) : '0'} wei</p>
           </div>
           <div className="text-right">
-            <p className="text-sm text-gray-300">Time Remaining</p>
-            <p className="font-mono font-bold text-lg text-white mt-1" aria-live="polite">{timeStr}</p>
+            <p className="text-sm opacity-75">Ends</p>
+            <p className="font-mono">{endTime ? new Date(Number(endTime) * 1000).toLocaleString() : '—'}</p>
           </div>
         </div>
 
-        {/* Circular Progress Timer around Play Button */}
-        <div className="flex flex-col items-center mb-6">
-          <div className="relative">
-            {/* Circular progress background */}
-            <div 
-              className="progress-radial glow-effect" 
-              style={{
-                background: `conic-gradient(from 0deg, #7F00FF 0%, #E100FF ${progress * 50}%, #FF61FF ${progress * 100}%, transparent ${progress * 100}%)`
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+          <Button
+            variant="primary"
+            disabled={!onDesiredChain || isPending || !currentRoundId || (endTime ? Date.now() >= Number(endTime) * 1000 : false)}
+            onClick={async () => {
+              try { await work(); addSuccess('Worked!'); } catch (e: any) { addError(e?.message || 'Failed to work'); }
+            }}
+          >
+            Work (once per hour)
+          </Button>
+          <div className="flex gap-2">
+            <input
+              className="input flex-1"
+              placeholder={`Amount in ${desiredChain.nativeCurrency.symbol}`}
+              value={fundAmount}
+              onChange={(e) => setFundAmount(e.target.value)}
+              inputMode="decimal"
+            />
+            <Button
+              variant="secondary"
+              disabled={!onDesiredChain || isPending || !currentRoundId || !fundAmount}
+              onClick={async () => {
+                try {
+                  const wei = parseEther(fundAmount as `${number}`);
+                  await fund(wei);
+                  addSuccess('Funded');
+                } catch (e: any) {
+                  addError(e?.message || 'Failed to fund');
+                }
               }}
             >
-              {/* Inner content */}
-              <div className="relative z-10 flex flex-col items-center">
-                <Button 
-                  onClick={onPlay} 
-                  isLoading={playBusy} 
-                  className="btn-pulse w-20 h-20 rounded-full text-sm font-bold" 
-                  aria-label="Play now"
-                >
-                  {playBusy ? '' : 'PLAY'}
-                </Button>
-                <div className="text-xs text-gray-300 mt-2">
-                  {Math.floor(progress * 100)}% Complete
-                </div>
-              </div>
-            </div>
+              Fund
+            </Button>
           </div>
         </div>
 
-        {/* Reward Pool with Glow */}
-        <div className="text-center mb-4">
-          <p className="text-sm text-gray-300 mb-2">Reward Pool</p>
-          <div className="glow-effect inline-block px-4 py-2 rounded-full bg-gradient-to-r from-purple-500/20 to-pink-500/20 border border-purple-400/30">
-            <AnimatedNumber 
-              className="text-2xl font-bold text-white" 
-              value={round.rewardPool} 
-              format={(v) => `${v.toFixed(2)} CELO`} 
-              ariaLabel={`Reward pool ${round.rewardPool.toFixed(2)} CELO`} 
-            />
-          </div>
+        <div className="mt-4">
+          <h4 className="font-semibold mb-2">Top 3 (live)</h4>
+          <ul className="space-y-1 text-sm">
+            {topPlayers.map((p, i) => (
+              <li key={i} className="flex justify-between">
+                <span className="opacity-80">#{i + 1} {p && p !== '0x0000000000000000000000000000000000000000' ? `${p.slice(0,6)}…${p.slice(-4)}` : '—'}</span>
+                <span className="font-mono">{topScores[i] ? String(topScores[i]) : '0'}</span>
+              </li>
+            ))}
+          </ul>
         </div>
 
-        {/* Status Messages */}
-        {playMsg && (
-          <div className="mt-4 text-center">
-            <div className="inline-block px-4 py-2 bg-green-400/20 border border-green-400/30 rounded-full">
-              <p className="text-sm text-green-300" role="status">{playMsg}</p>
-            </div>
-          </div>
-        )}
-        {error && (
-          <div className="mt-4 text-center">
-            <div className="inline-block px-4 py-2 bg-red-400/20 border border-red-400/30 rounded-full">
-              <p className="text-sm text-red-300" role="alert">{error}</p>
-            </div>
-          </div>
-        )}
-      </div>
-
-      {/* My Stats with Neumorphic Style */}
-      <div className="grid grid-cols-2 gap-4">
-        <div className="card-neuro p-4 text-center">
-          <p className="text-sm text-gray-300 mb-2">My Points</p>
-          <AnimatedNumber 
-            className="text-2xl font-bold text-white" 
-            value={me?.points ?? 0} 
-            ariaLabel={`My points ${me?.points ?? 0}`} 
-          />
-        </div>
-        <div className="card-neuro p-4 text-center">
-          <p className="text-sm text-gray-300 mb-2">My Rank</p>
-          <p className="text-2xl font-bold text-white tabular-nums">
-            {meRank >= 0 ? `#${meRank + 1}` : "—"}
-          </p>
+        <div className="grid grid-cols-2 gap-2 pt-2 border-t border-white/10">
+          {isOwner ? (
+            <Button disabled={!onDesiredChain || isPending} onClick={async () => { try { await startRound(); addSuccess('Round started'); } catch (e: any) { addError(e?.message || 'Failed start'); }}}>Start Round (owner)</Button>
+          ) : (
+            <Button disabled aria-disabled>Start Round (owner)</Button>
+          )}
+          <Button disabled={!onDesiredChain || isPending || !currentRoundId || !endTime || Date.now() < Number(endTime) * 1000} onClick={async () => { try { await settleRound(); addSuccess('Round settled'); } catch (e: any) { addError(e?.message || 'Failed settle'); }}}>Settle Round (anyone)</Button>
         </div>
       </div>
 
-      {/* Activity Card with Organic Shape */}
-      <div className="card blob p-6 text-center">
-        <div className="glow-effect inline-block">
-          <p className="text-gray-300">🚀 Stay tuned for live activity…</p>
-        </div>
+      {/* Info */}
+      <div className="card p-6">
+        <p className="opacity-80 text-sm">Gameplay: click Work once per hour. Earlier clicks in the hour earn more points. Rounds last 5 days; prize pool can be funded by anyone; top 3 split 50/30/20 when settled.</p>
       </div>
     </div>
   );
