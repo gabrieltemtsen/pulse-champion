@@ -6,6 +6,7 @@ import { SafeFarcasterSolanaProvider } from '~/components/providers/SafeFarcaste
 import { ANALYTICS_ENABLED, RETURN_URL } from '~/lib/constants';
 import { ToastProvider } from '~/components/ui/Toast';
 import { ModeProvider } from "~/components/providers/ModeProvider";
+import { GameEnvProvider } from "~/components/providers/GameEnvProvider";
 
 const WagmiProvider = dynamic(
   () => import('~/components/providers/WagmiProvider'),
@@ -24,17 +25,19 @@ export function Providers({
   return (
     <WagmiProvider>
       <ModeProvider>
-        <MiniAppProvider
-          analyticsEnabled={ANALYTICS_ENABLED}
-          backButtonEnabled={true}
-          returnUrl={RETURN_URL}
-        >
-          <ToastProvider>
-            <SafeFarcasterSolanaProvider endpoint={solanaEndpoint}>
-              {children}
-            </SafeFarcasterSolanaProvider>
-          </ToastProvider>
-        </MiniAppProvider>
+        <GameEnvProvider>
+          <MiniAppProvider
+            analyticsEnabled={ANALYTICS_ENABLED}
+            backButtonEnabled={true}
+            returnUrl={RETURN_URL}
+          >
+            <ToastProvider>
+              <SafeFarcasterSolanaProvider endpoint={solanaEndpoint}>
+                {children}
+              </SafeFarcasterSolanaProvider>
+            </ToastProvider>
+          </MiniAppProvider>
+        </GameEnvProvider>
       </ModeProvider>
     </WagmiProvider>
   );

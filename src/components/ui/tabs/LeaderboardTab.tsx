@@ -1,13 +1,16 @@
 "use client";
 
-import { useMiniApp } from "@neynar/react";
-import { useLeaderboard } from "~/hooks/useGameData";
 import { AnimatedNumber } from "~/components/ui/AnimatedNumber";
+import { useChampionGame } from "~/hooks/useChampionGame";
+import { getAddressUrl } from "~/lib/explorers";
+import { useMode } from "~/components/providers/ModeProvider";
+import { useAccount } from "wagmi";
 
 export function LeaderboardTab() {
-  const { context } = useMiniApp();
-  const meFid = context?.user?.fid;
-  const { top5, me, meRank } = useLeaderboard(meFid);
+  const { address } = useAccount();
+  const { topPlayers, topScores, myScore, desiredChain } = useChampionGame();
+  const chainId = desiredChain.id;
+  const entries = topPlayers.map((p, i) => ({ address: p, score: topScores[i] ?? 0n }));
 
   return (
     <div className="px-4 space-y-6">
@@ -17,11 +20,11 @@ export function LeaderboardTab() {
         <p className="text-gray-300">Top champions in the current round</p>
       </div>
 
-      {/* Top 5 with Floating Cards */}
+      {/* Top 3 with Floating Cards */}
       <div className="space-y-3">
-        {top5.map((p, i) => (
+        {entries.map((p, i) => (
           <div 
-            key={p.fid} 
+            key={i} 
             className={`card-floating p-4 animate-in fade-in slide-in-from-bottom-2 duration-200 ${
               i === 0 ? 'card-primary' : ''
             }`}
@@ -39,24 +42,18 @@ export function LeaderboardTab() {
                   {i + 1}
                 </div>
                 
-                {/* Avatar with Glow */}
-                <div className="relative">
-                  <img 
-                    src={p.avatar} 
-                    alt={`${p.name}'s avatar`} 
-                    className="w-12 h-12 rounded-full border-2 border-purple-400/50 glow-effect" 
-                  />
-                  {i === 0 && (
-                    <div className="absolute -top-1 -right-1 w-6 h-6 bg-yellow-400 rounded-full flex items-center justify-center">
-                      <span className="text-xs">👑</span>
-                    </div>
-                  )}
-                </div>
-                
                 {/* Player Info */}
                 <div>
-                  <p className="font-semibold text-white">{p.name}</p>
-                  <p className="text-xs text-gray-300">Player #{p.fid}</p>
+                  <p className="font-semibold text-white">
+                    {p.address && p.address !== '0x0000000000000000000000000000000000000000'
+                      ? (() => {
+                          const url = getAddressUrl(chainId, p.address as `0x${string}`);
+                          const label = `${p.address.slice(0,6)}…${p.address.slice(-4)}`;
+                          return url ? <a className="underline" href={url} target="_blank" rel="noreferrer">{label}</a> : label;
+                        })()
+                      : '—'}
+                  </p>
+                  <p className="text-xs text-gray-300">Address</p>
                 </div>
               </div>
               
@@ -64,7 +61,7 @@ export function LeaderboardTab() {
               <div className="text-right">
                 <AnimatedNumber 
                   className="text-xl font-bold text-white" 
-                  value={p.points} 
+                  value={Number(p.score || 0n)} 
                 />
                 <p className="text-xs text-gray-300">points</p>
               </div>
@@ -76,54 +73,16 @@ export function LeaderboardTab() {
         ))}
       </div>
 
-      {/* My Position Card (if not in top 5) */}
-      {me && meRank >= 5 && (
-        <div className="relative">
-          <div className="text-center mb-2">
-            <p className="text-sm text-gray-400">Your Position</p>
-          </div>
-          <div className="card-neuro p-4 animate-in fade-in slide-in-from-bottom-2 duration-300 border border-purple-400/30">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-4">
-                {/* My Rank Badge */}
-                <div className="flex items-center justify-center w-10 h-10 rounded-full bg-gradient-to-r from-purple-400 to-pink-400 text-white font-bold text-lg">
-                  {meRank + 1}
-                </div>
-                
-                {/* My Avatar with Special Glow */}
-                <div className="relative">
-                  <img 
-                    src={me.avatar} 
-                    alt="Your avatar" 
-                    className="w-12 h-12 rounded-full border-2 border-pink-400/50 glow-effect" 
-                  />
-                  <div className="absolute inset-0 rounded-full animate-ping bg-pink-400/20" />
-                </div>
-                
-                <div>
-                  <p className="font-semibold text-white">You</p>
-                  <p className="text-xs text-gray-300">Keep climbing! 🚀</p>
-                </div>
-              </div>
-              
-              <div className="text-right">
-                <AnimatedNumber 
-                  className="text-xl font-bold text-white" 
-                  value={me.points} 
-                />
-                <p className="text-xs text-gray-300">points</p>
-              </div>
-            </div>
-          </div>
+      {/* My score */}
+      {address && (
+        <div className="card-neuro p-4 text-center">
+          <p className="text-sm text-gray-300 mb-1">Your current round score</p>
+          <p className="text-2xl font-bold text-white">{String(myScore)}</p>
         </div>
       )}
 
-      {/* Motivational Call-to-Action */}
-      <div className="card blob p-6 text-center">
-        <div className="glow-effect inline-block">
-          <p className="text-gray-300 mb-2">💫 Ready to climb higher?</p>
-          <p className="text-sm text-gray-400">Play more rounds to boost your ranking!</p>
-        </div>
+      <div className="card p-4 text-center">
+        <p className="text-sm opacity-80">Work early each hour to maximize points. Top 3 split the pool when the round ends.</p>
       </div>
     </div>
   );

@@ -5,24 +5,31 @@ import { useAccount, useChainId, useReadContract, useWriteContract } from "wagmi
 import { PulseChampionGameAbi } from "~/lib/abi/PulseChampionGame";
 import { useMode } from "~/components/providers/ModeProvider";
 import { base, celo } from "wagmi/chains";
-
-function getGameAddress(mode: "base" | "celo") {
-  const key = mode === "base" ? "NEXT_PUBLIC_CHAMPION_GAME_BASE" : "NEXT_PUBLIC_CHAMPION_GAME_CELO";
-  return (process.env[key] as `0x${string}` | undefined) || undefined;
-}
+import { CHAMPION_GAME_ADDRESSES, CHAMPION_GAME_ADDRESSES_STAGING } from "~/lib/gameAddresses";
+import { useGameEnv } from "~/components/providers/GameEnvProvider";
 
 export function useChampionGame() {
   const { mode } = useMode();
+  const { env } = useGameEnv();
   const chainId = useChainId();
   const { address } = useAccount();
-  const gameAddress = getGameAddress(mode);
+  const gameAddress = env === "staging"
+    ? (mode === "celo" ? CHAMPION_GAME_ADDRESSES_STAGING.celo : CHAMPION_GAME_ADDRESSES_STAGING.base)
+    : (mode === "celo" ? CHAMPION_GAME_ADDRESSES.celo : CHAMPION_GAME_ADDRESSES.base);
   const desiredChain = mode === "celo" ? celo : base;
   const onDesiredChain = Number(chainId) === desiredChain.id;
 
-  const { data: currentRound } = useReadContract({
+  const { data: currentRound, isError: isRoundError } = useReadContract({
     abi: PulseChampionGameAbi,
     address: gameAddress,
     functionName: "getCurrentRound",
+    query: { enabled: Boolean(gameAddress) },
+  });
+
+  const { data: active, isError: isActiveError } = useReadContract({
+    abi: PulseChampionGameAbi,
+    address: gameAddress,
+    functionName: "roundActive",
     query: { enabled: Boolean(gameAddress) },
   });
 
@@ -81,6 +88,8 @@ export function useChampionGame() {
     gameAddress,
     owner: owner as string | undefined,
     isOwner,
+    roundActive: Boolean(active),
+    isValidContract: Boolean(gameAddress) && !isRoundError && !isActiveError,
     currentRoundId,
     startTime,
     endTime,

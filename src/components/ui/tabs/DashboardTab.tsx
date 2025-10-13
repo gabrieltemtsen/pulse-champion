@@ -40,6 +40,7 @@ export function DashboardTab() {
     fund,
     startRound,
     settleRound,
+    isValidContract,
   } = useChampionGame();
   const [fundAmount, setFundAmount] = useState<string>("0.01");
 
@@ -84,7 +85,7 @@ export function DashboardTab() {
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
           <Button
             variant="primary"
-            disabled={!onDesiredChain || isPending || !currentRoundId || (endTime ? Date.now() >= Number(endTime) * 1000 : false)}
+            disabled={!onDesiredChain || isPending || !currentRoundId || (endTime ? Date.now() >= Number(endTime) * 1000 : false) || !isValidContract}
             onClick={async () => {
               try { await work(); addSuccess('Worked!'); } catch (e: any) { addError(e?.message || 'Failed to work'); }
             }}
@@ -101,7 +102,7 @@ export function DashboardTab() {
             />
             <Button
               variant="secondary"
-              disabled={!onDesiredChain || isPending || !currentRoundId || !fundAmount}
+              disabled={!onDesiredChain || isPending || !currentRoundId || !fundAmount || !isValidContract}
               onClick={async () => {
                 try {
                   const wei = parseEther(fundAmount as `${number}`);
@@ -117,6 +118,10 @@ export function DashboardTab() {
           </div>
         </div>
 
+        {!currentRoundId && (
+          <div className="text-xs opacity-80 mt-2">No active round. The owner can start a round from the Profile tab.</div>
+        )}
+
         <div className="mt-4">
           <h4 className="font-semibold mb-2">Top 3 (live)</h4>
           <ul className="space-y-1 text-sm">
@@ -129,19 +134,15 @@ export function DashboardTab() {
           </ul>
         </div>
 
-        <div className="grid grid-cols-2 gap-2 pt-2 border-t border-white/10">
-          {isOwner ? (
-            <Button disabled={!onDesiredChain || isPending} onClick={async () => { try { await startRound(); addSuccess('Round started'); } catch (e: any) { addError(e?.message || 'Failed start'); }}}>Start Round (owner)</Button>
-          ) : (
-            <Button disabled aria-disabled>Start Round (owner)</Button>
-          )}
-          <Button disabled={!onDesiredChain || isPending || !currentRoundId || !endTime || Date.now() < Number(endTime) * 1000} onClick={async () => { try { await settleRound(); addSuccess('Round settled'); } catch (e: any) { addError(e?.message || 'Failed settle'); }}}>Settle Round (anyone)</Button>
+        <div className="grid grid-cols-1 gap-2 pt-2 border-t border-white/10">
+          <Button disabled={!onDesiredChain || isPending || !currentRoundId || !endTime || Date.now() < Number(endTime) * 1000 || !isValidContract} onClick={async () => { try { await settleRound(); addSuccess('Round settled'); } catch (e: any) { addError(e?.message || 'Failed settle'); }}}>Settle Round (anyone)</Button>
         </div>
       </div>
 
       {/* Info */}
       <div className="card p-6">
         <p className="opacity-80 text-sm">Gameplay: click Work once per hour. Earlier clicks in the hour earn more points. Rounds last 5 days; prize pool can be funded by anyone; top 3 split 50/30/20 when settled.</p>
+        {!isValidContract && <p className="opacity-80 text-sm mt-2 text-red-400">Configured contract doesn’t implement the game interface. Update NEXT_PUBLIC_CHAMPION_GAME_{mode === 'celo' ? 'CELO' : 'BASE'}.</p>}
       </div>
     </div>
   );

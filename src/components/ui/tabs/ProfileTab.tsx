@@ -1,11 +1,21 @@
 "use client";
 
 import { useMiniApp } from "@neynar/react";
-import { useAccount } from "wagmi";
+import { useAccount, useSwitchChain } from "wagmi";
+import { useMode } from "~/components/providers/ModeProvider";
+import { useGameEnv } from "~/components/providers/GameEnvProvider";
+import { useChampionGame } from "~/hooks/useChampionGame";
+import { Button } from "../Button";
+import { useToast } from "~/components/ui/Toast";
 
 export function ProfileTab() {
   const { context } = useMiniApp();
   const { address, isConnected } = useAccount();
+  const { addSuccess, addError } = useToast();
+  const { mode } = useMode();
+  const { isOwner, onDesiredChain, desiredChain, startRound, gameAddress, owner, roundActive, endTime, isValidContract } = useChampionGame();
+  const { env, setEnv } = useGameEnv();
+  const { switchChain, isPending: isSwitching } = useSwitchChain();
 
   return (
     <div className="px-4 space-y-6">
@@ -59,6 +69,52 @@ export function ProfileTab() {
             <p className="text-gray-400 text-sm">No wallet connected</p>
             <p className="text-xs text-gray-500 mt-1">Connect to claim rewards</p>
           </div>
+        )}
+      </div>
+
+      {/* Admin Controls */}
+      <div className="card p-5 animate-in fade-in duration-300">
+        <div className="flex items-center justify-between mb-3">
+          <h4 className="font-semibold text-white">🔐 Admin</h4>
+          <div className="text-xs opacity-80">Contract: <span className="font-mono">{gameAddress ?? 'not set'}</span></div>
+        </div>
+        <div className="flex items-center gap-2 mb-3">
+          <span className="text-xs opacity-80">Environment:</span>
+          <div className="mode-toggle flex items-center border border-white/20">
+            <button aria-pressed={env === 'prod'} className={`px-2 py-1 text-xs ${env === 'prod' ? 'bg-white text-black' : ''}`} onClick={() => setEnv('prod')}>Production</button>
+            <button aria-pressed={env === 'staging'} className={`px-2 py-1 text-xs ${env === 'staging' ? 'bg-white text-black' : ''}`} onClick={() => setEnv('staging')}>Staging</button>
+          </div>
+        </div>
+        {!isValidContract && (
+          <div className="text-sm text-red-400">The configured contract does not match the game interface. Please set NEXT_PUBLIC_CHAMPION_GAME_{mode === 'celo' ? 'CELO' : 'BASE'} to the PulseChampionGame address.</div>
+        )}
+        {isOwner ? (
+          <div className="space-y-2">
+            <p className="text-xs text-gray-400">You are the owner. Chain: {desiredChain.name}</p>
+            <p className="text-xs text-gray-400">Active round: {roundActive ? 'Yes' : 'No'}{endTime ? ` • Ends: ${new Date(Number(endTime) * 1000).toLocaleString()}` : ''}</p>
+            {!onDesiredChain && (
+              <Button
+                variant="secondary"
+                disabled={isSwitching}
+                onClick={() => switchChain({ chainId: desiredChain.id })}
+              >
+                Switch to {desiredChain.name}
+              </Button>
+            )}
+            <Button
+              disabled={!onDesiredChain || roundActive || !isValidContract}
+              onClick={async () => { try { await startRound(); addSuccess('Round started'); } catch (e: any) { addError(e?.message || 'Failed to start'); } }}
+            >
+              Start Round
+            </Button>
+            <div className="text-xs text-gray-400">
+              <div>Owner on chain: <span className="font-mono">{owner}</span></div>
+              <div>Your address: <span className="font-mono">{address}</span></div>
+              <div>Status: {onDesiredChain ? 'On correct chain' : 'Wrong chain'}</div>
+            </div>
+          </div>
+        ) : (
+          <p className="text-sm text-gray-400">Connect the owner wallet to manage rounds.</p>
         )}
       </div>
 

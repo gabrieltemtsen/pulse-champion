@@ -14,8 +14,7 @@ import { SignSolanaMessage } from "../wallet/SignSolanaMessage";
 import { SendSolana } from "../wallet/SendSolana";
 import { USE_WALLET, APP_NAME } from "../../../lib/constants";
 import { useMiniApp } from "@neynar/react";
-import { usePulseChampion } from "~/hooks/usePulseChampion";
-import { getAddressUrl } from "~/lib/explorers";
+// Legacy points panel removed
 
 /**
  * WalletTab component manages wallet-related UI for both EVM and Solana chains.
@@ -298,8 +297,6 @@ export function WalletTab() {
       {isConnected && (
         <>
           <SendEth />
-          {/* On-chain Points Panel */}
-          <PulseChampionPanel />
           <Button
             onClick={sendEvmContractTransaction}
             disabled={!isConnected || isEvmTransactionPending}
@@ -356,88 +353,4 @@ export function WalletTab() {
   );
 }
 
-function PulseChampionPanel() {
-  const { address } = useAccount();
-  const {
-    mode,
-    contractAddress,
-    activeOnCorrectChain,
-    ready,
-    points,
-    pointsLoading,
-    isOwner,
-    owner,
-    awardPoints,
-    setPoints,
-    writePending,
-  } = usePulseChampion();
-
-  const [to, setTo] = useState<string>("");
-  const [amount, setAmount] = useState<string>("0");
-  const [setValue, setSetValue] = useState<string>("0");
-
-  return (
-    <div className="card p-3 space-y-2">
-      <div className="text-sm font-semibold">On-chain Points ({mode})</div>
-      <div className="text-xs text-gray-400">
-        Contract: {contractAddress ? (
-          (() => {
-            const url = getAddressUrl(mode === "celo" ? 42220 : 8453, contractAddress);
-            return url ? <a href={url} target="_blank" rel="noreferrer" className="underline">{contractAddress}</a> : contractAddress;
-          })()
-        ) : "(not set)"}
-      </div>
-      {!activeOnCorrectChain && (
-        <div className="text-xs text-red-400">Switch to the mode’s chain to interact.</div>
-      )}
-      <div className="text-sm">
-        My Points: {pointsLoading ? "…" : points.toString()}
-      </div>
-      {isOwner && (
-        <div className="space-y-2 pt-2 border-t border-white/10">
-          <div className="text-xs">Owner: {owner}</div>
-          <div className="grid grid-cols-1 gap-2">
-            <input
-              className="input"
-              placeholder="Recipient (0x...)"
-              value={to}
-              onChange={(e) => setTo(e.target.value)}
-            />
-            <div className="grid grid-cols-2 gap-2">
-              <input
-                className="input"
-                placeholder="Award amount"
-                value={amount}
-                onChange={(e) => setAmount(e.target.value)}
-                inputMode="numeric"
-              />
-              <button
-                className="btn btn-secondary"
-                disabled={!ready || writePending || !to}
-                onClick={() => awardPoints(to as `0x${string}`, BigInt(amount || "0"))}
-              >
-                Award
-              </button>
-            </div>
-            <div className="grid grid-cols-2 gap-2">
-              <input
-                className="input"
-                placeholder="Set value"
-                value={setValue}
-                onChange={(e) => setSetValue(e.target.value)}
-                inputMode="numeric"
-              />
-              <button
-                className="btn btn-primary"
-                disabled={!ready || writePending || !to}
-                onClick={() => setPoints(to as `0x${string}`, BigInt(setValue || "0"))}
-              >
-                Set
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-    </div>
-  );
-}
+// Legacy PulseChampionPanel removed

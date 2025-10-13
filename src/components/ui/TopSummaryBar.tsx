@@ -3,7 +3,7 @@
 import { useMiniApp } from "@neynar/react";
 import { AnimatedNumber } from "~/components/ui/AnimatedNumber";
 import { useGameState } from "~/hooks/useGameData";
-import { usePulseChampion } from "~/hooks/usePulseChampion";
+import { useChampionGame } from "~/hooks/useChampionGame";
 
 function msToMMSS(ms: number) {
   const total = Math.floor(ms / 1000);
@@ -16,8 +16,8 @@ function msToMMSS(ms: number) {
 export function TopSummaryBar() {
   const { context } = useMiniApp();
   const meFid = context?.user?.fid;
-  const { round, timeLeft, me } = useGameState(meFid);
-  const { points, pointsLoading, mode } = usePulseChampion();
+  const { round, timeLeft } = useGameState(meFid);
+  const { myScore, mode } = useChampionGame();
 
   return (
     <div className="sticky top-0 z-20 mx-4 mt-2">
@@ -36,11 +36,7 @@ export function TopSummaryBar() {
             </div>
             <div className="hidden sm:flex items-center gap-2">
               <span aria-hidden>⭐</span>
-              {pointsLoading ? (
-                <span className="font-semibold">…</span>
-              ) : (
-                <span className="font-semibold">{points.toString()}</span>
-              )}
+              <span className="font-semibold">{String(myScore)}</span>
               <span className="text-xs opacity-70 uppercase">on-chain ({mode})</span>
             </div>
           </div>
