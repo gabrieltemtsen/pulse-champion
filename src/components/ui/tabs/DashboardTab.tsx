@@ -7,7 +7,7 @@ import { AnimatedNumber } from "~/components/ui/AnimatedNumber";
 import { useChampionGame } from "~/hooks/useChampionGame";
 import { useAccount } from "wagmi";
 import { useMode } from "~/components/providers/ModeProvider";
-import { parseEther } from "viem";
+import { parseEther, formatEther } from "viem";
 
 function msToHMS(ms: number) {
   const total = Math.floor(ms / 1000);
@@ -41,6 +41,8 @@ export function DashboardTab() {
     startRound,
     settleRound,
     isValidContract,
+    alreadyWorkedThisHour,
+    nextWorkInSec,
   } = useChampionGame();
   const [fundAmount, setFundAmount] = useState<string>("0.01");
 
@@ -70,28 +72,93 @@ export function DashboardTab() {
       </div>
 
       {/* Round Controls + Work/Fund */}
-      <div className="card p-6 space-y-4">
-        <div className="flex items-center justify-between">
+      <div className="card p-6 space-y-5">
+        {/* Summary row */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div>
             <p className="text-sm opacity-75">Prize Pool</p>
-            <p className="text-xl font-bold">{prizePool ? String(prizePool) : '0'} wei</p>
+            <p className="text-2xl font-bold">
+              {prizePool ? Number(formatEther(prizePool)).toLocaleString(undefined, { maximumFractionDigits: 4 }) : '0'} {desiredChain.nativeCurrency.symbol}
+            </p>
           </div>
-          <div className="text-right">
+          <div>
             <p className="text-sm opacity-75">Ends</p>
-            <p className="font-mono">{endTime ? new Date(Number(endTime) * 1000).toLocaleString() : '—'}</p>
+            <p className="font-mono text-sm">{endTime ? new Date(Number(endTime) * 1000).toLocaleString() : '—'}</p>
           </div>
+        </div>
+
+        {/* Deposit panel */}
+        <div className="rounded border border-white/10 p-3 space-y-3">
+          <div className="flex items-center justify-between">
+            <p className="text-sm opacity-75">Fund Prize Pool</p>
+            <p className="text-xs opacity-60">{onDesiredChain ? desiredChain.name : 'Wrong chain'}</p>
+          </div>
+          {(() => {
+            let amountOk = false;
+            try { amountOk = !!fundAmount && parseEther(fundAmount) > 0n; } catch { amountOk = false; }
+            const canDeposit = onDesiredChain && !isPending && !!currentRoundId && isValidContract && amountOk;
+            return (
+              <>
+                {/* Input row */}
+                <div className="flex flex-wrap gap-2 items-center">
+                  <input
+                    className="input flex-1 min-w-0"
+                    placeholder={`0.00 ${desiredChain.nativeCurrency.symbol}`}
+                    value={fundAmount}
+                    onChange={(e) => setFundAmount(e.target.value)}
+                    inputMode="decimal"
+                  />
+                  <div className="text-xs px-2 py-1 border border-white/20">{desiredChain.nativeCurrency.symbol}</div>
+                  <Button
+                    variant="secondary"
+                    className="w-full sm:w-auto"
+                    disabled={!canDeposit}
+                    onClick={async () => {
+                      try {
+                        const wei = parseEther(fundAmount);
+                        await fund(wei);
+                        addSuccess('Deposit submitted');
+                      } catch (e: any) {
+                        addError(e?.message || 'Failed to deposit');
+                      }
+                    }}
+                  >
+                    Deposit
+                  </Button>
+                </div>
+                {/* Presets */}
+                <div className="flex flex-wrap gap-2">
+                  {['0.01','0.05','0.1'].map((preset) => (
+                    <button key={preset} type="button" className="btn btn-secondary px-2 py-1 text-xs" onClick={() => setFundAmount(preset)}>
+                      {preset} {desiredChain.nativeCurrency.symbol}
+                    </button>
+                  ))}
+                </div>
+                {/* Helpers */}
+                {!amountOk && fundAmount && (
+                  <p className="text-xs text-red-400">Enter a valid amount (e.g., 0.01)</p>
+                )}
+                {!currentRoundId && (
+                  <p className="text-xs opacity-70">No active round. Owner can start a round from Profile.</p>
+                )}
+              </>
+            );
+          })()}
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
           <Button
             variant="primary"
-            disabled={!onDesiredChain || isPending || !currentRoundId || (endTime ? Date.now() >= Number(endTime) * 1000 : false) || !isValidContract}
+            disabled={!onDesiredChain || isPending || !currentRoundId || (endTime ? Date.now() >= Number(endTime) * 1000 : false) || !isValidContract || alreadyWorkedThisHour}
             onClick={async () => {
               try { await work(); addSuccess('Worked!'); } catch (e: any) { addError(e?.message || 'Failed to work'); }
             }}
           >
             Work (once per hour)
           </Button>
+          {alreadyWorkedThisHour && (
+            <div className="text-xs opacity-80 self-center">Next work in {Math.floor(nextWorkInSec / 60)}:{String(nextWorkInSec % 60).padStart(2, '0')}</div>
+          )}
           <div className="flex gap-2">
             <input
               className="input flex-1"
@@ -105,7 +172,7 @@ export function DashboardTab() {
               disabled={!onDesiredChain || isPending || !currentRoundId || !fundAmount || !isValidContract}
               onClick={async () => {
                 try {
-                  const wei = parseEther(fundAmount as `${number}`);
+                  const wei = parseEther(fundAmount);
                   await fund(wei);
                   addSuccess('Funded');
                 } catch (e: any) {
@@ -140,9 +207,16 @@ export function DashboardTab() {
       </div>
 
       {/* Info */}
-      <div className="card p-6">
+      <div className="card p-6 space-y-2">
         <p className="opacity-80 text-sm">Gameplay: click Work once per hour. Earlier clicks in the hour earn more points. Rounds last 5 days; prize pool can be funded by anyone; top 3 split 50/30/20 when settled.</p>
         {!isValidContract && <p className="opacity-80 text-sm mt-2 text-red-400">Configured contract doesn’t implement the game interface. Update NEXT_PUBLIC_CHAMPION_GAME_{mode === 'celo' ? 'CELO' : 'BASE'}.</p>}
+        <div className="text-xs opacity-75">
+          <p>Tips:</p>
+          <ul className="list-disc list-inside">
+            <li>Work is disabled if you’ve already worked this hour.</li>
+            <li>Fund only works during an active round on the correct chain.</li>
+          </ul>
+        </div>
       </div>
     </div>
   );

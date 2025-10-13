@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useMemo, useState } from "react";
+import { useCallback, useMemo, useState, useEffect } from "react";
 import { useAccount, useChainId, useReadContract, useWriteContract } from "wagmi";
 import { PulseChampionGameAbi } from "~/lib/abi/PulseChampionGame";
 import { useMode } from "~/components/providers/ModeProvider";
@@ -60,6 +60,29 @@ export function useChampionGame() {
 
   const isOwner = !!owner && !!address && (owner as string).toLowerCase() === address.toLowerCase();
 
+  // Last worked hour and countdown helpers
+  const { data: lastWorked } = useReadContract({
+    abi: PulseChampionGameAbi,
+    address: gameAddress,
+    functionName: "lastWorkedHour",
+    args: currentRoundId && address ? [currentRoundId, address] : undefined,
+    query: { enabled: Boolean(gameAddress && currentRoundId && address) },
+  });
+
+  const [nowSec, setNowSec] = useState<number>(() => Math.floor(Date.now() / 1000));
+  useEffect(() => {
+    const t = setInterval(() => setNowSec(Math.floor(Date.now() / 1000)), 1000);
+    return () => clearInterval(t);
+  }, []);
+
+  const start = Number(startTime || 0n);
+  const elapsed = start > 0 ? Math.max(0, nowSec - start) : 0;
+  const HOUR = 3600;
+  const currentHourIndex = start > 0 ? Math.floor(elapsed / HOUR) : -1;
+  const lastHour = lastWorked ? Number(lastWorked) : -1;
+  const alreadyWorkedThisHour = currentHourIndex >= 0 && lastHour === currentHourIndex;
+  const nextWorkInSec = alreadyWorkedThisHour ? (HOUR - (elapsed % HOUR)) : 0;
+
   const work = useCallback(() => {
     if (!gameAddress) throw new Error("Game address missing");
     return writeContract({ abi: PulseChampionGameAbi, address: gameAddress, functionName: "work" });
@@ -99,6 +122,8 @@ export function useChampionGame() {
     settled,
     myScore: (myScore as bigint | undefined) ?? 0n,
     isPending,
+    alreadyWorkedThisHour,
+    nextWorkInSec,
     work,
     fund,
     startRound,

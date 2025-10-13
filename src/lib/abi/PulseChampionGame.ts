@@ -28,6 +28,7 @@ export const PulseChampionGameAbi = [
   ] },
   { type: "function", name: "getTop3", stateMutability: "view", inputs: [{ type: "uint256", name: "id" }], outputs: [ { type: "address[3]" }, { type: "uint256[3]" } ] },
   { type: "function", name: "totalScores", stateMutability: "view", inputs: [{ type: "uint256" }, { type: "address" }], outputs: [{ type: "uint256" }] },
+  { type: "function", name: "lastWorkedHour", stateMutability: "view", inputs: [{ type: "uint256" }, { type: "address" }], outputs: [{ type: "uint32" }] },
   { type: "function", name: "startRound", stateMutability: "nonpayable", inputs: [], outputs: [] },
   { type: "function", name: "fundCurrentRound", stateMutability: "payable", inputs: [], outputs: [] },
   { type: "function", name: "work", stateMutability: "nonpayable", inputs: [], outputs: [] },

@@ -31,7 +31,7 @@ export function RewardsTab() {
               <div className="flex items-center justify-between">
                 <div>
                   <p className="font-semibold text-white">Round #{r.id}</p>
-                  <p className="text-gray-300 text-sm">Prize pool: {String(r.prizePool)} wei</p>
+                  <p className="text-gray-300 text-sm">Prize pool: {Number(formatEther(r.prizePool)).toLocaleString(undefined, { maximumFractionDigits: 4 })} {desiredChain.nativeCurrency.symbol}</p>
                 </div>
                 <div className="text-right text-xs opacity-80">Settled</div>
               </div>
@@ -45,7 +45,7 @@ export function RewardsTab() {
                           ? (() => { const url = getAddressUrl(chainId, p as `0x${string}`); const label = `${p.slice(0,6)}…${p.slice(-4)}`; return url ? <a className="underline" href={url} target="_blank" rel="noreferrer">{label}</a> : label; })()
                           : '—'}
                       </span>
-                      <span className="font-mono">{String(amounts[i])} wei</span>
+                      <span className="font-mono">{Number(formatEther(amounts[i])).toLocaleString(undefined, { maximumFractionDigits: 4 })} {desiredChain.nativeCurrency.symbol}</span>
                     </li>
                   ))}
                 </ul>
@@ -64,3 +64,4 @@ export function RewardsTab() {
     </div>
   );
 }
+import { formatEther } from "viem";

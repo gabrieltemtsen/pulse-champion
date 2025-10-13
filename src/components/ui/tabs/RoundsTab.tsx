@@ -29,7 +29,7 @@ export function RoundsTab() {
             </div>
             <div className="text-right">
               <p className="text-xs text-gray-500 dark:text-gray-400">Prize Pool</p>
-              <p className="font-semibold">{String(r.prizePool)} wei</p>
+              <p className="font-semibold">{Number(formatEther(r.prizePool)).toLocaleString(undefined, { maximumFractionDigits: 4 })} {desiredChain.nativeCurrency.symbol}</p>
               <p className="text-xs mt-1">{r.settled ? 'Settled' : 'Active/Ended'}</p>
             </div>
           </div>
@@ -53,3 +53,4 @@ export function RoundsTab() {
     </div>
   );
 }
+import { formatEther } from "viem";
