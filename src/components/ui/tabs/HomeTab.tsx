@@ -2,6 +2,8 @@
 
 import { useState } from "react";
 import { Button } from "../Button";
+import { useToast } from "~/components/ui/Toast";
+import { usePublicClient } from "wagmi";
 import { AnimatedNumber } from "../AnimatedNumber";
 import { useChampionGame } from "~/hooks/useChampionGame";
 import { useMode } from "~/components/providers/ModeProvider";
@@ -22,7 +24,10 @@ export function HomeTab() {
     settleRound,
     alreadyWorkedThisHour,
     nextWorkInSec,
+    refresh,
   } = useChampionGame();
+  const { addSuccess, addError } = useToast();
+  const publicClient = usePublicClient();
 
   const [fundAmount, setFundAmount] = useState<string>("0.05");
 
@@ -62,7 +67,7 @@ export function HomeTab() {
         <Button
           variant="primary"
           disabled={!canWork}
-          onClick={async () => { try { await work(); } catch {} }}
+          onClick={async () => { try { const hash = await work(); if (publicClient && hash) { await publicClient.waitForTransactionReceipt({ hash }); } refresh(); addSuccess('Work confirmed'); } catch (e: any) { addError(e?.message || 'Failed to work'); } }}
         >
           Work (once per hour)
         </Button>
@@ -93,7 +98,7 @@ export function HomeTab() {
             variant="secondary"
             className="w-full sm:w-auto"
             disabled={!canDepositFinal}
-            onClick={async () => { try { await fund(parseEther(fundAmount)); } catch {} }}
+            onClick={async () => { try { const hash = await fund(parseEther(fundAmount)); if (publicClient && hash) { await publicClient.waitForTransactionReceipt({ hash }); } refresh(); addSuccess('Deposit confirmed'); } catch (e: any) { addError(e?.message || 'Failed to deposit'); } }}
           >
             Deposit
           </Button>
@@ -120,7 +125,7 @@ export function HomeTab() {
       <div className="card p-5">
         <Button
           disabled={!canSettle}
-          onClick={async () => { try { await settleRound(); } catch {} }}
+          onClick={async () => { try { const hash = await settleRound(); if (publicClient && hash) { await publicClient.waitForTransactionReceipt({ hash }); } refresh(); addSuccess('Round settled'); } catch (e: any) { addError(e?.message || 'Failed to settle'); } }}
         >
           Settle Round (anyone)
         </Button>
