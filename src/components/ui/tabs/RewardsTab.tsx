@@ -13,8 +13,8 @@ export function RewardsTab() {
   return (
     <div className="px-4 space-y-6">
       <div className="text-center">
-        <h2 className="text-2xl font-bold text-white mb-2 glow-effect">💰 Rewards</h2>
-        <p className="text-gray-300">Settled rounds automatically paid out to winners</p>
+        <h2 className="text-2xl font-bold text-white mb-2 glow-effect">Rewards</h2>
+        <p className="text-gray-300">Settled rounds and payouts</p>
       </div>
 
       {isLoading && <div className="spinner h-6 w-6 mx-auto" />}

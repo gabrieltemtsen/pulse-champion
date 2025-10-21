@@ -58,20 +58,19 @@ export function DashboardTab() {
         <div className="flex items-start justify-between">
           <div>
             <h3 className="text-xl font-bold">Pulse Champion</h3>
-            <p className="text-sm opacity-75 mt-1">Mode: {mode} • Chain ID: {desiredChain.id} • Round: {currentRoundId ? Number(currentRoundId) : '—'}</p>
           </div>
           {!onDesiredChain && (
             <div className="text-xs text-red-400">Switch to {desiredChain.name} to interact</div>
           )}
         </div>
-        <div className="grid grid-cols-2 gap-4 mt-6">
-          <div className="card-neuro p-4 text-center">
+        <div className="mt-6 flex justify-center">
+          <div className="card-neuro p-4 text-center w-full max-w-xs">
             <p className="text-sm opacity-75 mb-2">My Score (round)</p>
             <AnimatedNumber className="text-2xl font-bold" value={Number(myScore)} />
-          </div>
-          <div className="card-neuro p-4 text-center">
-            <p className="text-sm opacity-75 mb-2">Contract</p>
-            <p className="text-xs break-all opacity-80">{gameAddress ?? 'not set'}</p>
+            {(() => {
+              const idx = topPlayers.findIndex((p) => p && address && p.toLowerCase() === address.toLowerCase());
+              return <p className="text-xs text-gray-300 mt-1">Position: {idx >= 0 ? `#${idx + 1}` : '—'}</p>;
+            })()}
           </div>
         </div>
       </div>
@@ -163,7 +162,7 @@ export function DashboardTab() {
           })()}
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 items-start">
+        <div className="flex flex-col items-center gap-2">
           <Button
             variant="primary"
             disabled={!onDesiredChain || isPending || !currentRoundId || (endTime ? Date.now() >= Number(endTime) * 1000 : false) || !isValidContract || alreadyWorkedThisHour}
@@ -178,44 +177,12 @@ export function DashboardTab() {
               } catch (e: any) { addError(e?.message || 'Failed to work'); }
             }}
           >
-            Work (once per hour)
+            Work once per hour
           </Button>
           {alreadyWorkedThisHour && (
             <div className="text-xs opacity-80 self-center">Next work in {Math.floor(nextWorkInSec / 60)}:{String(nextWorkInSec % 60).padStart(2, '0')}</div>
           )}
-          <div className="flex gap-2">
-            <input
-              className="input flex-1"
-              placeholder={`Amount in ${desiredChain.nativeCurrency.symbol}`}
-              value={fundAmount}
-              onChange={(e) => setFundAmount(e.target.value)}
-              inputMode="decimal"
-            />
-            <Button
-              variant="secondary"
-              disabled={!onDesiredChain || isPending || !currentRoundId || !fundAmount || !isValidContract || (!!endTime && Date.now() >= Number(endTime) * 1000)}
-              onClick={async () => {
-                try {
-                  const wei = parseEther(fundAmount);
-                  const hash = await fund(wei);
-                  if (publicClient && hash) {
-                    await publicClient.waitForTransactionReceipt({ hash });
-                  }
-                  refresh();
-                  addSuccess('Fund confirmed');
-                } catch (e: any) {
-                  addError(e?.message || 'Failed to fund');
-                }
-              }}
-            >
-              Fund
-            </Button>
-          </div>
-          <div className="sm:col-span-2 flex items-center justify-between">
-            <div className="flex items-center gap-2 text-sm opacity-90">
-              <span aria-hidden>👋</span>
-              <span>Click <strong>Work</strong> once per hour to earn points.</span>
-            </div>
+          <div className="w-full flex items-center justify-end">
             <button type="button" className="text-sm underline opacity-90 hover:opacity-100" onClick={() => setShowHow((v) => !v)} aria-expanded={showHow} aria-controls="how-it-works">
               How it works
             </button>
@@ -254,16 +221,11 @@ export function DashboardTab() {
         </div>
 
         <div className="grid grid-cols-1 gap-2 pt-2 border-t border-white/10">
-          <Button disabled={!onDesiredChain || isPending || !currentRoundId || !endTime || Date.now() < Number(endTime) * 1000 || !isValidContract} onClick={async () => { try { const hash = await settleRound(); if (publicClient && hash) { await publicClient.waitForTransactionReceipt({ hash }); } refresh(); addSuccess('Round settled'); } catch (e: any) { addError(e?.message || 'Failed settle'); }}}>Settle Round (anyone)</Button>
+          <Button disabled={!onDesiredChain || isPending || !currentRoundId || !endTime || Date.now() < Number(endTime) * 1000 || !isValidContract} onClick={async () => { try { const hash = await settleRound(); if (publicClient && hash) { await publicClient.waitForTransactionReceipt({ hash }); } refresh(); addSuccess('Round settled'); } catch (e: any) { addError(e?.message || 'Failed settle'); }}}>Settle Round</Button>
         </div>
       </div>
 
-      {/* Contract warning (kept) */}
-      {!isValidContract && (
-        <div className="card p-4 text-sm text-red-400">
-          Configured contract doesn’t implement the game interface. Update NEXT_PUBLIC_CHAMPION_GAME_{mode === 'celo' ? 'CELO' : 'BASE'}.
-        </div>
-      )}
+      {/* Production: suppress developer configuration warnings from the main UI */}
     </div>
   );
 }

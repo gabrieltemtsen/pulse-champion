@@ -22,7 +22,7 @@ export function ProfileTab() {
     <div className="px-4 space-y-6">
       {/* Header */}
       <div className="text-center">
-        <h2 className="text-2xl font-bold text-white mb-2 glow-effect">👤 Profile</h2>
+        <h2 className="text-2xl font-bold text-white mb-2 glow-effect">Profile</h2>
         <p className="text-gray-300">Manage your account settings and preferences</p>
       </div>
 
@@ -55,7 +55,7 @@ export function ProfileTab() {
       {/* Wallet Card */}
       <div className="card-neuro p-5 animate-in fade-in duration-300">
         <div className="flex items-center justify-between mb-3">
-          <h4 className="font-semibold text-white">💳 Wallet Connection</h4>
+          <h4 className="font-semibold text-white">Wallet</h4>
           <div className={`w-3 h-3 rounded-full ${isConnected ? 'bg-green-400 animate-pulse' : 'bg-red-400'}`} />
         </div>
         {isConnected ? (
@@ -76,7 +76,7 @@ export function ProfileTab() {
       {/* Admin Controls */}
       <div className="card p-5 animate-in fade-in duration-300">
         <div className="flex items-center justify-between mb-3">
-          <h4 className="font-semibold text-white">🔐 Admin</h4>
+          <h4 className="font-semibold text-white">Admin</h4>
           <div className="text-xs opacity-80">Contract: <span className="font-mono">{gameAddress ?? 'not set'}</span></div>
         </div>
         <div className="flex items-center gap-2 mb-3">
@@ -121,7 +121,7 @@ export function ProfileTab() {
 
       {/* Settings Card */}
       <div className="card-floating p-5 animate-in fade-in duration-400">
-        <h4 className="font-semibold text-white mb-4">⚙️ Preferences</h4>
+        <h4 className="font-semibold text-white mb-4">Preferences</h4>
         
         {/* Notifications Toggle */}
         <div className="flex items-center justify-between">

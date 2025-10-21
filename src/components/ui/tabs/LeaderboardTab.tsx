@@ -16,8 +16,8 @@ export function LeaderboardTab() {
     <div className="px-4 space-y-6">
       {/* Header with Glow Effect */}
       <div className="text-center">
-        <h2 className="text-2xl font-bold text-white mb-2 glow-effect">🏆 Leaderboard</h2>
-        <p className="text-gray-300">Top champions in the current round</p>
+        <h2 className="text-2xl font-bold text-white mb-2 glow-effect">Leaderboard</h2>
+        <p className="text-gray-300">Top champions this round</p>
       </div>
 
       {/* Top 3 with Floating Cards */}
@@ -78,12 +78,13 @@ export function LeaderboardTab() {
         <div className="card-neuro p-4 text-center">
           <p className="text-sm text-gray-300 mb-1">Your current round score</p>
           <p className="text-2xl font-bold text-white">{String(myScore)}</p>
+          {(() => {
+            const idx = entries.findIndex((e) => e.address && address && e.address.toLowerCase() === address.toLowerCase());
+            return <p className="text-xs text-gray-300 mt-1">Position: {idx >= 0 ? `#${idx + 1}` : '—'}</p>;
+          })()}
         </div>
       )}
 
-      <div className="card p-4 text-center">
-        <p className="text-sm opacity-80">Work early each hour to maximize points. Top 3 split the pool when the round ends.</p>
-      </div>
     </div>
   );
 }
