@@ -17,7 +17,9 @@ export function TopSummaryBar() {
   const { context } = useMiniApp();
   const meFid = context?.user?.fid;
   const { round, timeLeft } = useGameState(meFid);
-  const { myScore, mode } = useChampionGame();
+  const { myScore, mode, endTime, settled } = useChampionGame();
+  const ended = !!endTime && Date.now() >= Number(endTime) * 1000;
+  const statusLabel = settled ? "Settled" : ended ? "Ended" : "Active";
 
   return (
     <div className="sticky top-0 z-20 mx-4 mt-2">
@@ -26,6 +28,7 @@ export function TopSummaryBar() {
           <div className="flex items-center gap-2 text-sm">
             <span aria-hidden>⏳</span>
             <span className="font-medium">Round #{round.id}</span>
+            <span className={`ml-1 px-1.5 py-0.5 rounded text-[10px] ${settled ? 'bg-green-500/20 text-green-300' : ended ? 'bg-red-500/20 text-red-300' : 'bg-blue-500/20 text-blue-300'}`}>{statusLabel}</span>
             <span className="text-gray-500 dark:text-gray-400">•</span>
             <span className="font-mono tabular-nums" aria-live="polite">{msToMMSS(timeLeft)}</span>
           </div>

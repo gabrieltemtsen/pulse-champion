@@ -30,8 +30,10 @@ export function HomeTab() {
   try { amountOk = !!fundAmount && parseEther(fundAmount) > 0n; } catch { amountOk = false; }
   const canDeposit = onDesiredChain && !isPending && !!currentRoundId && isValidContract && amountOk;
 
-  const canWork = onDesiredChain && !isPending && !!currentRoundId && isValidContract && !(endTime ? Date.now() >= Number(endTime) * 1000 : false) && !alreadyWorkedThisHour;
-  const canSettle = onDesiredChain && !isPending && !!currentRoundId && !!endTime && Date.now() >= Number(endTime) * 1000 && isValidContract;
+  const roundEnded = !!endTime && Date.now() >= Number(endTime) * 1000;
+  const canWork = onDesiredChain && !isPending && !!currentRoundId && isValidContract && !roundEnded && !alreadyWorkedThisHour;
+  const canSettle = onDesiredChain && !isPending && !!currentRoundId && !!endTime && roundEnded && isValidContract;
+  const canDepositFinal = canDeposit && !roundEnded;
 
   return (
     <div className="px-4 space-y-5 max-w-md mx-auto">
@@ -90,7 +92,7 @@ export function HomeTab() {
           <Button
             variant="secondary"
             className="w-full sm:w-auto"
-            disabled={!canDeposit}
+            disabled={!canDepositFinal}
             onClick={async () => { try { await fund(parseEther(fundAmount)); } catch {} }}
           >
             Deposit
@@ -108,6 +110,9 @@ export function HomeTab() {
         )}
         {!currentRoundId && (
           <p className="text-xs opacity-70">No active round. Owner can start a round from Profile.</p>
+        )}
+        {roundEnded && (
+          <p className="text-xs opacity-70">Funding disabled after round end.</p>
         )}
       </div>
 

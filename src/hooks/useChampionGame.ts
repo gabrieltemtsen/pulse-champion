@@ -19,14 +19,14 @@ export function useChampionGame() {
   const desiredChain = mode === "celo" ? celo : base;
   const onDesiredChain = Number(chainId) === desiredChain.id;
 
-  const { data: currentRound, isError: isRoundError } = useReadContract({
+  const { data: currentRound, isError: isRoundError, refetch: refetchCurrentRound } = useReadContract({
     abi: PulseChampionGameAbi,
     address: gameAddress,
     functionName: "getCurrentRound",
     query: { enabled: Boolean(gameAddress) },
   });
 
-  const { data: active, isError: isActiveError } = useReadContract({
+  const { data: active, isError: isActiveError, refetch: refetchActive } = useReadContract({
     abi: PulseChampionGameAbi,
     address: gameAddress,
     functionName: "roundActive",
@@ -41,7 +41,7 @@ export function useChampionGame() {
   const topScores = ((currentRound as any)?.topScores as bigint[] | undefined) || [];
   const settled = (currentRound as any)?.settled as boolean | undefined;
 
-  const { data: myScore } = useReadContract({
+  const { data: myScore, refetch: refetchMyScore } = useReadContract({
     abi: PulseChampionGameAbi,
     address: gameAddress,
     functionName: "totalScores",
@@ -51,7 +51,7 @@ export function useChampionGame() {
 
   const { writeContract, isPending } = useWriteContract();
 
-  const { data: owner } = useReadContract({
+  const { data: owner, refetch: refetchOwner } = useReadContract({
     abi: PulseChampionGameAbi,
     address: gameAddress,
     functionName: "owner",
@@ -61,7 +61,7 @@ export function useChampionGame() {
   const isOwner = !!owner && !!address && (owner as string).toLowerCase() === address.toLowerCase();
 
   // Last worked hour and countdown helpers
-  const { data: lastWorked } = useReadContract({
+  const { data: lastWorked, refetch: refetchLastWorked } = useReadContract({
     abi: PulseChampionGameAbi,
     address: gameAddress,
     functionName: "lastWorkedHour",
@@ -128,5 +128,12 @@ export function useChampionGame() {
     fund,
     startRound,
     settleRound,
+    refresh: () => {
+      try { refetchCurrentRound?.(); } catch {}
+      try { refetchActive?.(); } catch {}
+      try { refetchMyScore?.(); } catch {}
+      try { refetchOwner?.(); } catch {}
+      try { refetchLastWorked?.(); } catch {}
+    },
   };
 }

@@ -22,10 +22,10 @@ export default {
   theme: {
   	extend: {
   		colors: {
-  			// Main theme color - change this to update the entire app's color scheme
-  			primary: "#8b5cf6", // Main brand color
-  			"primary-light": "#a78bfa", // For hover states
-  			"primary-dark": "#7c3aed", // For active states
+			// Main theme color - change this to update the entire app's color scheme
+			primary: "#3182CE", // Blue brand color for Base mode
+			"primary-light": "#63B3ED", // For hover states (light blue)
+			"primary-dark": "#2C5282", // For active states (dark blue)
   			
   			// Secondary colors for backgrounds and text
   			secondary: "#f8fafc", // Light backgrounds

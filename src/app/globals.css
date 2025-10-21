@@ -25,24 +25,24 @@
 @tailwind utilities;
 
 :root {
-  /* Pulse Champion Dark Theme */
+  /* Pulse Champion Dark Theme (Base mode - Blue) */
   --background: #121217;
   --foreground: #ffffff;
   
-  /* Primary gradient colors */
-  --primary: #7F00FF;
-  --primary-mid: #E100FF;
-  --primary-light: #FF61FF;
-  --primary-dark: #5A00B8;
+  /* Primary gradient colors (Blue palette) */
+  --primary: #3182CE;       /* blue */
+  --primary-mid: #0EA5E9;   /* sky/cyan mid */
+  --primary-light: #67E8F9; /* light cyan */
+  --primary-dark: #1E3A8A;  /* deep blue */
   
   /* Secondary accents */
-  --accent-peach: #FF9AA2;
-  --accent-pink: #FFD6E8;
+  --accent-peach: #A7F3D0;   /* soft mint accent */
+  --accent-pink: #BFDBFE;    /* soft blue accent */
   
-  /* Glassmorphism colors */
-  --glass-bg: rgba(127, 0, 255, 0.1);
-  --glass-border: rgba(127, 0, 255, 0.2);
-  --glass-shadow: rgba(127, 0, 255, 0.3);
+  /* Glassmorphism colors (blue-tinted) */
+  --glass-bg: rgba(49, 130, 206, 0.10);
+  --glass-border: rgba(49, 130, 206, 0.20);
+  --glass-shadow: rgba(49, 130, 206, 0.30);
   
   /* Neumorphism colors */
   --neuro-light: rgba(255, 255, 255, 0.1);
@@ -50,14 +50,14 @@
   --neuro-bg: #1a1a20;
   
   /* Gradients */
-  --gradient-primary: linear-gradient(135deg, #7F00FF 0%, #E100FF 50%, #FF61FF 100%);
-  --gradient-secondary: linear-gradient(135deg, #FF9AA2 0%, #FFD6E8 100%);
-  --gradient-pulse: radial-gradient(circle, rgba(127, 0, 255, 0.4) 0%, rgba(127, 0, 255, 0) 70%);
+  --gradient-primary: linear-gradient(135deg, #3182CE 0%, #0EA5E9 50%, #67E8F9 100%);
+  --gradient-secondary: linear-gradient(135deg, #93C5FD 0%, #CFFAFE 100%);
+  --gradient-pulse: radial-gradient(circle, rgba(49, 130, 206, 0.4) 0%, rgba(49, 130, 206, 0) 70%);
   
   /* Animation variables */
   --pulse-duration: 2s;
-  --glow-intensity: 0 0 20px rgba(127, 0, 255, 0.5);
-  --hover-glow: 0 0 30px rgba(127, 0, 255, 0.7);
+  --glow-intensity: 0 0 20px rgba(49, 130, 206, 0.5);
+  --hover-glow: 0 0 30px rgba(14, 165, 233, 0.7);
   
   /* Organic shape variables */
   --border-radius-organic: 20px;
@@ -207,7 +207,7 @@ body {
   
   .input:focus {
     box-shadow: var(--glow-intensity);
-    background: rgba(127, 0, 255, 0.15);
+    background: rgba(49, 130, 206, 0.15);
   }
 
   /* Enhanced loading spinner with glow */
@@ -315,9 +315,9 @@ body::before {
   width: 100%;
   height: 100%;
   background: 
-    radial-gradient(circle at 20% 20%, rgba(127, 0, 255, 0.1) 0%, transparent 50%),
-    radial-gradient(circle at 80% 80%, rgba(255, 154, 162, 0.1) 0%, transparent 50%),
-    radial-gradient(circle at 40% 60%, rgba(225, 0, 255, 0.05) 0%, transparent 50%);
+    radial-gradient(circle at 20% 20%, rgba(49, 130, 206, 0.10) 0%, transparent 50%),
+    radial-gradient(circle at 80% 80%, rgba(103, 232, 249, 0.10) 0%, transparent 50%),
+    radial-gradient(circle at 40% 60%, rgba(14, 165, 233, 0.05) 0%, transparent 50%);
   z-index: -1;
   animation: float 8s ease-in-out infinite;
 }

@@ -20,7 +20,7 @@ export const Footer: React.FC<FooterProps> = ({ activeTab, setActiveTab }) => (
             onClick={() => setActiveTab(Tab.Dashboard)}
             className={`flex flex-col items-center justify-center w-full h-full focus-ring rounded-md transition-all duration-300 ${
               activeTab === Tab.Dashboard 
-                ? 'text-white bg-gradient-to-r from-purple-500 to-pink-500 shadow-lg transform scale-105 glow-effect' 
+                ? 'text-white bg-gradient-to-r from-blue-500 to-cyan-500 shadow-lg transform scale-105 glow-effect' 
                 : 'text-gray-300 hover:text-white hover:bg-white/10'
             }`}
             role="tab"
@@ -37,7 +37,7 @@ export const Footer: React.FC<FooterProps> = ({ activeTab, setActiveTab }) => (
             onClick={() => setActiveTab(Tab.Leaderboard)}
             className={`flex flex-col items-center justify-center w-full h-full focus-ring rounded-md transition-all duration-300 ${
               activeTab === Tab.Leaderboard 
-                ? 'text-white bg-gradient-to-r from-purple-500 to-pink-500 shadow-lg transform scale-105 glow-effect' 
+                ? 'text-white bg-gradient-to-r from-blue-500 to-cyan-500 shadow-lg transform scale-105 glow-effect' 
                 : 'text-gray-300 hover:text-white hover:bg-white/10'
             }`}
             role="tab"
@@ -54,7 +54,7 @@ export const Footer: React.FC<FooterProps> = ({ activeTab, setActiveTab }) => (
             onClick={() => setActiveTab(Tab.Rounds)}
             className={`flex flex-col items-center justify-center w-full h-full focus-ring rounded-md transition-all duration-300 ${
               activeTab === Tab.Rounds 
-                ? 'text-white bg-gradient-to-r from-purple-500 to-pink-500 shadow-lg transform scale-105 glow-effect' 
+                ? 'text-white bg-gradient-to-r from-blue-500 to-cyan-500 shadow-lg transform scale-105 glow-effect' 
                 : 'text-gray-300 hover:text-white hover:bg-white/10'
             }`}
             role="tab"
@@ -71,7 +71,7 @@ export const Footer: React.FC<FooterProps> = ({ activeTab, setActiveTab }) => (
             onClick={() => setActiveTab(Tab.Rewards)}
             className={`flex flex-col items-center justify-center w-full h-full focus-ring rounded-md transition-all duration-300 ${
               activeTab === Tab.Rewards 
-                ? 'text-white bg-gradient-to-r from-purple-500 to-pink-500 shadow-lg transform scale-105 glow-effect' 
+                ? 'text-white bg-gradient-to-r from-blue-500 to-cyan-500 shadow-lg transform scale-105 glow-effect' 
                 : 'text-gray-300 hover:text-white hover:bg-white/10'
             }`}
             role="tab"
@@ -88,7 +88,7 @@ export const Footer: React.FC<FooterProps> = ({ activeTab, setActiveTab }) => (
             onClick={() => setActiveTab(Tab.Profile)}
             className={`flex flex-col items-center justify-center w-full h-full focus-ring rounded-md transition-all duration-300 ${
               activeTab === Tab.Profile 
-                ? 'text-white bg-gradient-to-r from-purple-500 to-pink-500 shadow-lg transform scale-105 glow-effect' 
+                ? 'text-white bg-gradient-to-r from-blue-500 to-cyan-500 shadow-lg transform scale-105 glow-effect' 
                 : 'text-gray-300 hover:text-white hover:bg-white/10'
             }`}
             role="tab"

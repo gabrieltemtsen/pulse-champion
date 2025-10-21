@@ -5,7 +5,7 @@ import { Button } from "../Button";
 import { useToast } from "~/components/ui/Toast";
 import { AnimatedNumber } from "~/components/ui/AnimatedNumber";
 import { useChampionGame } from "~/hooks/useChampionGame";
-import { useAccount } from "wagmi";
+import { useAccount, usePublicClient } from "wagmi";
 import { useMode } from "~/components/providers/ModeProvider";
 import { parseEther, formatEther } from "viem";
 
@@ -43,8 +43,13 @@ export function DashboardTab() {
     isValidContract,
     alreadyWorkedThisHour,
     nextWorkInSec,
+    refresh,
   } = useChampionGame();
   const [fundAmount, setFundAmount] = useState<string>("0.01");
+  const [showHow, setShowHow] = useState<boolean>(false);
+  const publicClient = usePublicClient();
+  const roundEnded = !!endTime && Date.now() >= Number(endTime) * 1000;
+  const statusLabel = settled ? "Settled" : roundEnded ? "Ended" : "Active";
 
   return (
     <div className="space-y-6 px-4">
@@ -72,7 +77,11 @@ export function DashboardTab() {
       </div>
 
       {/* Round Controls + Work/Fund */}
-      <div className="card p-6 space-y-5">
+      <div className="card p-6 space-y-5 relative">
+        <div className="flex items-center justify-between text-xs">
+          <span className={`px-2 py-1 rounded ${settled ? 'bg-green-500/20 text-green-300' : roundEnded ? 'bg-red-500/20 text-red-300' : 'bg-blue-500/20 text-blue-300'}`}>{statusLabel} round</span>
+          {roundEnded && !settled && <span className="opacity-80">Anyone can settle the round</span>}
+        </div>
         {/* Summary row */}
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div>
@@ -96,7 +105,8 @@ export function DashboardTab() {
           {(() => {
             let amountOk = false;
             try { amountOk = !!fundAmount && parseEther(fundAmount) > 0n; } catch { amountOk = false; }
-            const canDeposit = onDesiredChain && !isPending && !!currentRoundId && isValidContract && amountOk;
+            const roundEnded = !!endTime && Date.now() >= Number(endTime) * 1000;
+            const canDeposit = onDesiredChain && !isPending && !!currentRoundId && isValidContract && amountOk && !roundEnded;
             return (
               <>
                 {/* Input row */}
@@ -116,8 +126,12 @@ export function DashboardTab() {
                     onClick={async () => {
                       try {
                         const wei = parseEther(fundAmount);
-                        await fund(wei);
-                        addSuccess('Deposit submitted');
+                        const hash = await fund(wei);
+                        if (publicClient && hash) {
+                          await publicClient.waitForTransactionReceipt({ hash });
+                        }
+                        refresh();
+                        addSuccess('Deposit confirmed');
                       } catch (e: any) {
                         addError(e?.message || 'Failed to deposit');
                       }
@@ -141,17 +155,27 @@ export function DashboardTab() {
                 {!currentRoundId && (
                   <p className="text-xs opacity-70">No active round. Owner can start a round from Profile.</p>
                 )}
+                {!!endTime && Date.now() >= Number(endTime) * 1000 && (
+                  <p className="text-xs opacity-70">Funding disabled after round end.</p>
+                )}
               </>
             );
           })()}
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 items-start">
           <Button
             variant="primary"
             disabled={!onDesiredChain || isPending || !currentRoundId || (endTime ? Date.now() >= Number(endTime) * 1000 : false) || !isValidContract || alreadyWorkedThisHour}
             onClick={async () => {
-              try { await work(); addSuccess('Worked!'); } catch (e: any) { addError(e?.message || 'Failed to work'); }
+              try {
+                const hash = await work();
+                if (publicClient && hash) {
+                  await publicClient.waitForTransactionReceipt({ hash });
+                }
+                refresh();
+                addSuccess('Work confirmed');
+              } catch (e: any) { addError(e?.message || 'Failed to work'); }
             }}
           >
             Work (once per hour)
@@ -169,12 +193,16 @@ export function DashboardTab() {
             />
             <Button
               variant="secondary"
-              disabled={!onDesiredChain || isPending || !currentRoundId || !fundAmount || !isValidContract}
+              disabled={!onDesiredChain || isPending || !currentRoundId || !fundAmount || !isValidContract || (!!endTime && Date.now() >= Number(endTime) * 1000)}
               onClick={async () => {
                 try {
                   const wei = parseEther(fundAmount);
-                  await fund(wei);
-                  addSuccess('Funded');
+                  const hash = await fund(wei);
+                  if (publicClient && hash) {
+                    await publicClient.waitForTransactionReceipt({ hash });
+                  }
+                  refresh();
+                  addSuccess('Fund confirmed');
                 } catch (e: any) {
                   addError(e?.message || 'Failed to fund');
                 }
@@ -183,6 +211,30 @@ export function DashboardTab() {
               Fund
             </Button>
           </div>
+          <div className="sm:col-span-2 flex items-center justify-between">
+            <div className="flex items-center gap-2 text-sm opacity-90">
+              <span aria-hidden>👋</span>
+              <span>Click <strong>Work</strong> once per hour to earn points.</span>
+            </div>
+            <button type="button" className="text-sm underline opacity-90 hover:opacity-100" onClick={() => setShowHow((v) => !v)} aria-expanded={showHow} aria-controls="how-it-works">
+              How it works
+            </button>
+          </div>
+          {showHow && (
+            <div id="how-it-works" role="dialog" aria-label="How the game works" className="absolute right-3 -top-2 w-80 card-neuro p-4 z-30 border border-white/10">
+              <div className="flex items-start justify-between mb-2">
+                <h4 className="font-semibold">How it works</h4>
+                <button type="button" className="text-sm opacity-80 hover:opacity-100" onClick={() => setShowHow(false)} aria-label="Close">
+                  ✕
+                </button>
+              </div>
+              <ul className="text-sm space-y-2">
+                <li>• Click <strong>Work</strong> once per hour — earlier in the hour scores more.</li>
+                <li>• Anyone can <strong>Fund</strong> the prize pool during an active round.</li>
+                <li>• When the round ends, anyone can <strong>Settle</strong>. Top 3 split 50/30/20.</li>
+              </ul>
+            </div>
+          )}
         </div>
 
         {!currentRoundId && (
@@ -202,22 +254,16 @@ export function DashboardTab() {
         </div>
 
         <div className="grid grid-cols-1 gap-2 pt-2 border-t border-white/10">
-          <Button disabled={!onDesiredChain || isPending || !currentRoundId || !endTime || Date.now() < Number(endTime) * 1000 || !isValidContract} onClick={async () => { try { await settleRound(); addSuccess('Round settled'); } catch (e: any) { addError(e?.message || 'Failed settle'); }}}>Settle Round (anyone)</Button>
+          <Button disabled={!onDesiredChain || isPending || !currentRoundId || !endTime || Date.now() < Number(endTime) * 1000 || !isValidContract} onClick={async () => { try { const hash = await settleRound(); if (publicClient && hash) { await publicClient.waitForTransactionReceipt({ hash }); } refresh(); addSuccess('Round settled'); } catch (e: any) { addError(e?.message || 'Failed settle'); }}}>Settle Round (anyone)</Button>
         </div>
       </div>
 
-      {/* Info */}
-      <div className="card p-6 space-y-2">
-        <p className="opacity-80 text-sm">Gameplay: click Work once per hour. Earlier clicks in the hour earn more points. Rounds last 5 days; prize pool can be funded by anyone; top 3 split 50/30/20 when settled.</p>
-        {!isValidContract && <p className="opacity-80 text-sm mt-2 text-red-400">Configured contract doesn’t implement the game interface. Update NEXT_PUBLIC_CHAMPION_GAME_{mode === 'celo' ? 'CELO' : 'BASE'}.</p>}
-        <div className="text-xs opacity-75">
-          <p>Tips:</p>
-          <ul className="list-disc list-inside">
-            <li>Work is disabled if you’ve already worked this hour.</li>
-            <li>Fund only works during an active round on the correct chain.</li>
-          </ul>
+      {/* Contract warning (kept) */}
+      {!isValidContract && (
+        <div className="card p-4 text-sm text-red-400">
+          Configured contract doesn’t implement the game interface. Update NEXT_PUBLIC_CHAMPION_GAME_{mode === 'celo' ? 'CELO' : 'BASE'}.
         </div>
-      </div>
+      )}
     </div>
   );
 }

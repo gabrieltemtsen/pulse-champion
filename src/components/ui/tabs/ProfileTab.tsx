@@ -1,7 +1,7 @@
 "use client";
 
 import { useMiniApp } from "@neynar/react";
-import { useAccount, useSwitchChain } from "wagmi";
+import { useAccount, useSwitchChain, usePublicClient } from "wagmi";
 import { useMode } from "~/components/providers/ModeProvider";
 import { useGameEnv } from "~/components/providers/GameEnvProvider";
 import { useChampionGame } from "~/hooks/useChampionGame";
@@ -13,9 +13,10 @@ export function ProfileTab() {
   const { address, isConnected } = useAccount();
   const { addSuccess, addError } = useToast();
   const { mode } = useMode();
-  const { isOwner, onDesiredChain, desiredChain, startRound, gameAddress, owner, roundActive, endTime, isValidContract } = useChampionGame();
+  const { isOwner, onDesiredChain, desiredChain, startRound, gameAddress, owner, roundActive, endTime, isValidContract, refresh } = useChampionGame();
   const { env, setEnv } = useGameEnv();
   const { switchChain, isPending: isSwitching } = useSwitchChain();
+  const publicClient = usePublicClient();
 
   return (
     <div className="px-4 space-y-6">
@@ -32,9 +33,9 @@ export function ProfileTab() {
             <img 
               src={context?.user?.pfpUrl || ''} 
               alt="Your avatar" 
-              className="w-16 h-16 rounded-full border-2 border-purple-400/50 glow-effect bg-gray-700" 
+              className="w-16 h-16 rounded-full border-2 border-blue-400/50 glow-effect bg-gray-700" 
             />
-            <div className="absolute inset-0 rounded-full animate-pulse bg-purple-400/10" />
+            <div className="absolute inset-0 rounded-full animate-pulse bg-blue-400/10" />
           </div>
           <div>
             <h3 className="text-xl font-bold text-white">
@@ -60,7 +61,7 @@ export function ProfileTab() {
         {isConnected ? (
           <div>
             <p className="text-sm text-gray-300 mb-1">Connected Address</p>
-            <div className="bg-black/20 p-3 rounded-lg border border-purple-400/20">
+            <div className="bg-black/20 p-3 rounded-lg border border-blue-400/20">
               <p className="text-xs text-gray-300 font-mono break-all">{address}</p>
             </div>
           </div>
@@ -103,7 +104,7 @@ export function ProfileTab() {
             )}
             <Button
               disabled={!onDesiredChain || roundActive || !isValidContract}
-              onClick={async () => { try { await startRound(); addSuccess('Round started'); } catch (e: any) { addError(e?.message || 'Failed to start'); } }}
+              onClick={async () => { try { const hash = await startRound(); if (publicClient && hash) { await publicClient.waitForTransactionReceipt({ hash }); } refresh(); addSuccess('Round started'); } catch (e: any) { addError(e?.message || 'Failed to start'); } }}
             >
               Start Round
             </Button>

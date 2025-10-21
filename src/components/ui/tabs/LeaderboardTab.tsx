@@ -37,7 +37,7 @@ export function LeaderboardTab() {
                   i === 0 ? 'bg-gradient-to-r from-yellow-400 to-orange-500 text-white' :
                   i === 1 ? 'bg-gradient-to-r from-gray-300 to-gray-500 text-white' :
                   i === 2 ? 'bg-gradient-to-r from-orange-400 to-orange-600 text-white' :
-                  'bg-gradient-to-r from-purple-400 to-pink-400 text-white'
+                  'bg-gradient-to-r from-blue-400 to-cyan-400 text-white'
                 }`}>
                   {i + 1}
                 </div>
@@ -68,7 +68,7 @@ export function LeaderboardTab() {
             </div>
             
             {/* Hover Glow Effect */}
-            <div className="absolute inset-0 rounded-[var(--border-radius-organic)] opacity-0 hover:opacity-20 transition-opacity duration-300 bg-gradient-to-r from-purple-400 to-pink-400 pointer-events-none" />
+            <div className="absolute inset-0 rounded-[var(--border-radius-organic)] opacity-0 hover:opacity-20 transition-opacity duration-300 bg-gradient-to-r from-blue-400 to-cyan-400 pointer-events-none" />
           </div>
         ))}
       </div>
