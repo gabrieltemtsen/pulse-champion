@@ -113,7 +113,7 @@ export default function App(
     >
       {/* Header should be full width */}
       <Header neynarUser={neynarUser} />
-      <TopSummaryBar />
+      {currentTab !== Tab.Home && <TopSummaryBar />}
 
       {/* Main content and footer should be centered */}
       <div className="container py-2 pb-20" role="main">
@@ -136,4 +136,3 @@ export default function App(
     </div>
   );
 }
-
