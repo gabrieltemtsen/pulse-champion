@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { Button } from "../Button";
 import { useToast } from "~/components/ui/Toast";
-import { usePublicClient } from "wagmi";
+import { usePublicClient, useSwitchChain } from "wagmi";
 import { AnimatedNumber } from "../AnimatedNumber";
 import { useChampionGame } from "~/hooks/useChampionGame";
 import { useMode } from "~/components/providers/ModeProvider";
@@ -28,6 +28,7 @@ export function HomeTab() {
   } = useChampionGame();
   const { addSuccess, addError } = useToast();
   const publicClient = usePublicClient();
+  const { switchChain, isPending: isSwitching } = useSwitchChain();
 
   const [fundAmount, setFundAmount] = useState<string>("0.05");
 
@@ -82,7 +83,16 @@ export function HomeTab() {
           Work (once per hour)
         </Button>
         {!onDesiredChain && (
-          <p className="text-xs text-red-400">Switch to {desiredChain.name} to interact.</p>
+          <div className="flex items-center gap-2">
+            <p className="text-xs text-red-400">Wrong network.</p>
+            <Button
+              variant="secondary"
+              disabled={isSwitching}
+              onClick={() => switchChain({ chainId: desiredChain.id })}
+            >
+              Switch to {desiredChain.name}
+            </Button>
+          </div>
         )}
         {alreadyWorkedThisHour && (
           <p className="text-xs opacity-80">Next work in {Math.floor(nextWorkInSec / 60)}:{String(nextWorkInSec % 60).padStart(2, '0')}</p>

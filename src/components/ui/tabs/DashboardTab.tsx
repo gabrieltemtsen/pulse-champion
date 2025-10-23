@@ -5,7 +5,7 @@ import { Button } from "../Button";
 import { useToast } from "~/components/ui/Toast";
 import { AnimatedNumber } from "~/components/ui/AnimatedNumber";
 import { useChampionGame } from "~/hooks/useChampionGame";
-import { useAccount, usePublicClient } from "wagmi";
+import { useAccount, usePublicClient, useSwitchChain } from "wagmi";
 import { useMode } from "~/components/providers/ModeProvider";
 import { parseEther, formatEther } from "viem";
 import { useFarcasterNames } from "~/hooks/useFarcasterNames";
@@ -49,6 +49,7 @@ export function DashboardTab() {
   const [fundAmount, setFundAmount] = useState<string>("0.01");
   const [showHow, setShowHow] = useState<boolean>(false);
   const publicClient = usePublicClient();
+  const { switchChain, isPending: isSwitching } = useSwitchChain();
   const roundEnded = !!endTime && Date.now() >= Number(endTime) * 1000;
   const statusLabel = settled ? "Settled" : roundEnded ? "Ended" : "Active";
   const { namesByAddress } = useFarcasterNames(topPlayers);
@@ -62,7 +63,16 @@ export function DashboardTab() {
             <h3 className="text-xl font-bold">Pulse Champion</h3>
           </div>
           {!onDesiredChain && (
-            <div className="text-xs text-red-400">Switch to {desiredChain.name} to interact</div>
+            <div className="flex items-center gap-2">
+              <div className="text-xs text-red-400">Wrong network</div>
+              <Button
+                variant="secondary"
+                disabled={isSwitching}
+                onClick={() => switchChain({ chainId: desiredChain.id })}
+              >
+                Switch to {desiredChain.name}
+              </Button>
+            </div>
           )}
         </div>
         <div className="mt-6 flex justify-center">

@@ -34,7 +34,12 @@ function useCoinbaseWalletAutoConnect() {
   useEffect(() => {
     // Auto-connect if in Coinbase Wallet and not already connected
     if (isCoinbaseWallet && !isConnected) {
-      connect({ connector: connectors[1] }); // Coinbase Wallet connector
+      let desired: number = Number(base.id);
+      try {
+        const m = localStorage.getItem('pulsechampion:mode');
+        if (m === 'celo') desired = Number(celo.id);
+      } catch {}
+      connect({ connector: connectors[1], chainId: desired }); // Coinbase Wallet connector
     }
   }, [isCoinbaseWallet, isConnected, connect, connectors]);
 

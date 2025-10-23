@@ -131,6 +131,7 @@ export function WalletTab() {
   const { address, isConnected } = useAccount();
   const chainId = useChainId();
   const { mode } = useMode();
+  const desiredChainId = mode === "celo" ? celo.id : base.id;
   const solanaWallet = useSolanaWallet();
   const { publicKey: solanaPublicKey } = solanaWallet;
 
@@ -180,7 +181,7 @@ export function WalletTab() {
        window.ethereum?.isFarcaster ||
        context?.client);
     
-    if (context?.user?.fid && !isConnected && connectors.length > 0 && isInFarcasterClient) {
+    if (context?.user?.fid && !isConnected && connectors.length > 0 && isInFarcasterClient && mode === 'base') {
       console.log("Attempting auto-connection with Farcaster context...");
       console.log("- User FID:", context.user.fid);
       console.log("- Available connectors:", connectors.map((c, i) => `${i}: ${c.name}`));
@@ -189,7 +190,7 @@ export function WalletTab() {
       
       // Use the first connector (farcasterFrame) for auto-connection
       try {
-        connect({ connector: connectors[0] });
+        connect({ connector: connectors[0], chainId: desiredChainId });
       } catch (error) {
         console.error("Auto-connection failed:", error);
       }
@@ -200,7 +201,7 @@ export function WalletTab() {
       console.log("- Has connectors:", connectors.length > 0);
       console.log("- In Farcaster client:", isInFarcasterClient);
     }
-  }, [context?.user?.fid, isConnected, connectors, connect, context?.client]);
+  }, [context?.user?.fid, isConnected, connectors, connect, context?.client, desiredChainId, mode]);
 
   // --- Computed Values ---
   /**

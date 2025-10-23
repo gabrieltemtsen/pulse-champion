@@ -5,6 +5,9 @@ import { APP_NAME } from "~/lib/constants";
 import sdk from "@farcaster/miniapp-sdk";
 import { useMiniApp } from "@neynar/react";
 import { useMode } from "~/components/providers/ModeProvider";
+import { useAccount, useChainId, useSwitchChain } from "wagmi";
+import { base, celo } from "wagmi/chains";
+import { Button } from "./Button";
 
 type HeaderProps = {
   neynarUser?: {
@@ -18,6 +21,11 @@ export function Header({ neynarUser }: HeaderProps) {
   const [isUserDropdownOpen, setIsUserDropdownOpen] = useState(false);
   const { mode, setMode } = useMode();
   const [showBanner, setShowBanner] = useState(true);
+  const { isConnected } = useAccount();
+  const chainId = useChainId();
+  const desiredChain = mode === "celo" ? celo : base;
+  const onDesiredChain = Number(chainId) === desiredChain.id;
+  const { switchChain, isPending: isSwitching } = useSwitchChain();
   useEffect(() => {
     try {
       const v = localStorage.getItem('pc_testing_banner_dismissed');
@@ -79,6 +87,27 @@ export function Header({ neynarUser }: HeaderProps) {
           <div className="mt-2 px-3 py-2 rounded bg-yellow-400/20 text-yellow-100 border border-yellow-300/30 text-xs flex items-center justify-between">
             <span>We’re in the final stages of testing. Thanks for your patience!</span>
             <button type="button" className="ml-3 text-yellow-100/80 hover:text-yellow-100 focus-ring rounded" onClick={dismissBanner} aria-label="Dismiss testing notice">✕</button>
+          </div>
+        )}
+
+        {/* Wrong Network Banner */}
+        {isConnected && !onDesiredChain && (
+          <div className="mt-2 px-3 py-2 rounded bg-red-500/15 text-red-100 border border-red-400/30 text-xs flex items-center justify-between">
+            <span>Wrong network — switch to {desiredChain.name} to interact.</span>
+            <Button
+              variant="secondary"
+              size="sm"
+              disabled={isSwitching}
+              onClick={async () => {
+                try {
+                  await switchChain({ chainId: desiredChain.id });
+                } catch (e) {
+                  // ignore; user can try again or use wallet UI
+                }
+              }}
+            >
+              {isSwitching ? 'Switching…' : `Switch to ${desiredChain.name}`}
+            </Button>
           </div>
         )}
       </div>
