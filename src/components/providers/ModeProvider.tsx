@@ -2,8 +2,6 @@
 
 import React, { createContext, useCallback, useContext, useEffect, useMemo, useState } from "react";
 import { getItem, setItem } from "~/lib/localStorage";
-import { useAccount, useChainId, useSwitchChain } from "wagmi";
-import { base, celo } from "wagmi/chains";
 
 export type AppMode = "base" | "celo";
 
@@ -19,9 +17,7 @@ const STORAGE_KEY = "pulsechampion:mode";
 
 export function ModeProvider({ children }: { children: React.ReactNode }) {
   const [mode, setModeState] = useState<AppMode>(() => getItem<AppMode>(STORAGE_KEY) || "base");
-  const { isConnected } = useAccount();
-  const chainId = useChainId();
-  const { switchChain } = useSwitchChain();
+  // Keep chain switching manual via UI; no auto switch here to avoid flicker
 
   // Persist + apply class to <html>
   useEffect(() => {
@@ -34,19 +30,7 @@ export function ModeProvider({ children }: { children: React.ReactNode }) {
     }
   }, [mode]);
 
-  // Switch EVM chain to match mode when connected
-  useEffect(() => {
-    if (!isConnected) return;
-    try {
-      if (mode === "celo" && chainId !== celo.id) {
-        switchChain({ chainId: celo.id });
-      } else if (mode === "base" && chainId !== base.id) {
-        switchChain({ chainId: base.id });
-      }
-    } catch (_) {
-      // ignore switching errors; user can switch manually
-    }
-  }, [mode, isConnected, chainId, switchChain]);
+  // No automatic chain switching; handled via explicit switch buttons in UI.
 
   const setMode = useCallback((m: AppMode) => setModeState(m), []);
   const toggle = useCallback(() => setModeState((prev) => (prev === "base" ? "celo" : "base")), []);
@@ -61,4 +45,3 @@ export function useMode() {
   if (!ctx) throw new Error("useMode must be used within ModeProvider");
   return ctx;
 }
-
