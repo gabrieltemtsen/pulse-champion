@@ -8,6 +8,7 @@ import { useChampionGame } from "~/hooks/useChampionGame";
 import { useAccount, usePublicClient } from "wagmi";
 import { useMode } from "~/components/providers/ModeProvider";
 import { parseEther, formatEther } from "viem";
+import { useFarcasterNames } from "~/hooks/useFarcasterNames";
 
 function msToHMS(ms: number) {
   const total = Math.floor(ms / 1000);
@@ -50,6 +51,7 @@ export function DashboardTab() {
   const publicClient = usePublicClient();
   const roundEnded = !!endTime && Date.now() >= Number(endTime) * 1000;
   const statusLabel = settled ? "Settled" : roundEnded ? "Ended" : "Active";
+  const { namesByAddress } = useFarcasterNames(topPlayers);
 
   return (
     <div className="space-y-6 px-4">
@@ -212,12 +214,17 @@ export function DashboardTab() {
         <div className="mt-4">
           <h4 className="font-semibold mb-2">Top 3 (live)</h4>
           <ul className="space-y-1 text-sm">
-            {topPlayers.map((p, i) => (
-              <li key={i} className="flex justify-between">
-                <span className="opacity-80">#{i + 1} {p && p !== '0x0000000000000000000000000000000000000000' ? `${p.slice(0,6)}…${p.slice(-4)}` : '—'}</span>
-                <span className="font-mono">{topScores[i] ? String(topScores[i]) : '0'}</span>
-              </li>
-            ))}
+            {topPlayers.map((p, i) => {
+              const lower = (p || '').toLowerCase();
+              const name = namesByAddress[lower];
+              const label = name || (p && p !== '0x0000000000000000000000000000000000000000' ? `${p.slice(0,6)}…${p.slice(-4)}` : '—');
+              return (
+                <li key={i} className="flex justify-between">
+                  <span className="opacity-80">#{i + 1} {label}</span>
+                  <span className="font-mono">{topScores[i] ? String(topScores[i]) : '0'}</span>
+                </li>
+              );
+            })}
           </ul>
         </div>
 

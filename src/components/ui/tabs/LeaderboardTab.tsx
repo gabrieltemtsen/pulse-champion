@@ -5,12 +5,14 @@ import { useChampionGame } from "~/hooks/useChampionGame";
 import { getAddressUrl } from "~/lib/explorers";
 import { useMode } from "~/components/providers/ModeProvider";
 import { useAccount } from "wagmi";
+import { useFarcasterNames } from "~/hooks/useFarcasterNames";
 
 export function LeaderboardTab() {
   const { address } = useAccount();
   const { topPlayers, topScores, myScore, desiredChain } = useChampionGame();
   const chainId = desiredChain.id;
   const entries = topPlayers.map((p, i) => ({ address: p, score: topScores[i] ?? 0n }));
+  const { namesByAddress } = useFarcasterNames(entries.map(e => e.address));
 
   return (
     <div className="px-4 space-y-6">
@@ -45,15 +47,19 @@ export function LeaderboardTab() {
                 {/* Player Info */}
                 <div>
                   <p className="font-semibold text-white">
-                    {p.address && p.address !== '0x0000000000000000000000000000000000000000'
-                      ? (() => {
-                          const url = getAddressUrl(chainId, p.address as `0x${string}`);
-                          const label = `${p.address.slice(0,6)}…${p.address.slice(-4)}`;
-                          return url ? <a className="underline" href={url} target="_blank" rel="noreferrer">{label}</a> : label;
-                        })()
-                      : '—'}
+                    {(() => {
+                      const addr = p.address?.toLowerCase();
+                      const name = addr ? namesByAddress[addr] : undefined;
+                      if (name) return name;
+                      if (p.address && p.address !== '0x0000000000000000000000000000000000000000') {
+                        const url = getAddressUrl(chainId, p.address as `0x${string}`);
+                        const label = `${p.address.slice(0,6)}…${p.address.slice(-4)}`;
+                        return url ? <a className="underline" href={url} target="_blank" rel="noreferrer">{label}</a> : label;
+                      }
+                      return '—';
+                    })()}
                   </p>
-                  <p className="text-xs text-gray-300">Address</p>
+                  <p className="text-xs text-gray-300">{namesByAddress[p.address?.toLowerCase() || ''] ? 'Farcaster' : 'Address'}</p>
                 </div>
               </div>
               
