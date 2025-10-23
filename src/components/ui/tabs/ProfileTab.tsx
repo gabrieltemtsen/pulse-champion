@@ -1,9 +1,9 @@
 "use client";
 
 import { useMiniApp } from "@neynar/react";
-import { useAccount, useSwitchChain, usePublicClient } from "wagmi";
+import { useState } from "react";
+import { useAccount, useSwitchChain, usePublicClient, useConnect } from "wagmi";
 import { useMode } from "~/components/providers/ModeProvider";
-import { useGameEnv } from "~/components/providers/GameEnvProvider";
 import { useChampionGame } from "~/hooks/useChampionGame";
 import { Button } from "../Button";
 import { useToast } from "~/components/ui/Toast";
@@ -13,10 +13,17 @@ export function ProfileTab() {
   const { address, isConnected } = useAccount();
   const { addSuccess, addError } = useToast();
   const { mode } = useMode();
-  const { isOwner, onDesiredChain, desiredChain, startRound, gameAddress, owner, roundActive, endTime, isValidContract, refresh } = useChampionGame();
-  const { env, setEnv } = useGameEnv();
+  const { isOwner, onDesiredChain, desiredChain, startRound, gameAddress, owner, roundActive, endTime, isValidContract, refresh, hasContract } = useChampionGame();
   const { switchChain, isPending: isSwitching } = useSwitchChain();
   const publicClient = usePublicClient();
+  const { connectAsync, connect, connectors, isPending: isConnecting } = useConnect();
+  const [showVerify, setShowVerify] = useState(false);
+  const [verifyBusy, setVerifyBusy] = useState(false);
+  const [verifyMsg, setVerifyMsg] = useState<string | null>(null);
+  const [apiKey, setApiKey] = useState<string>("");
+  const [compiler, setCompiler] = useState<string>("v0.8.20+commit.a1b79de6");
+  const [contractName, setContractName] = useState<string>("PulseChampionGame");
+  const [sourceJson, setSourceJson] = useState<string>("");
 
   return (
     <div className="px-4 space-y-6">
@@ -66,30 +73,73 @@ export function ProfileTab() {
             </div>
           </div>
         ) : (
-          <div className="text-center py-4">
+          <div className="text-center py-4 space-y-3">
             <p className="text-gray-400 text-sm">No wallet connected</p>
-            <p className="text-xs text-gray-500 mt-1">Connect to claim rewards</p>
+            <div className="flex flex-col sm:flex-row gap-2 justify-center">
+              {(() => {
+                const mm = connectors.find((c) => c.name.toLowerCase().includes('meta'));
+                const cb = connectors.find((c) => c.name.toLowerCase().includes('coinbase'));
+                return (
+                  <>
+                    {mm && (
+                      <button
+                        type="button"
+                        className="btn btn-primary px-4 py-2"
+                        disabled={isConnecting}
+                        onClick={async () => {
+                          try {
+                            await connectAsync({ connector: mm, chainId: desiredChain.id });
+                            addSuccess('Wallet connected');
+                          } catch (e: any) {
+                            addError(e?.message || 'Failed to connect MetaMask');
+                          }
+                        }}
+                      >
+                        {isConnecting ? 'Connecting…' : (mm.ready ? 'Connect MetaMask' : 'Install MetaMask')}
+                      </button>
+                    )}
+                    {cb && (
+                      <button
+                        type="button"
+                        className="btn btn-secondary px-4 py-2"
+                        disabled={isConnecting}
+                        onClick={async () => {
+                          try {
+                            await connectAsync({ connector: cb, chainId: desiredChain.id });
+                            addSuccess('Wallet connected');
+                          } catch (e: any) { addError(e?.message || 'Failed to connect Coinbase Wallet'); }
+                        }}
+                      >
+                        {isConnecting ? 'Connecting…' : (cb.ready ? 'Connect Coinbase' : 'Install Coinbase Wallet')}
+                      </button>
+                    )}
+                    {!mm && !cb && (
+                      <button
+                        type="button"
+                        className="btn btn-primary px-4 py-2"
+                        disabled
+                      >
+                        No wallet available
+                      </button>
+                    )}
+                  </>
+                );
+              })()}
+            </div>
+            <p className="text-xs text-gray-500">Connect to claim rewards</p>
           </div>
         )}
       </div>
 
-      {/* Admin Controls */}
-      <div className="card p-5 animate-in fade-in duration-300">
-        <div className="flex items-center justify-between mb-3">
-          <h4 className="font-semibold text-white">Admin</h4>
-          <div className="text-xs opacity-80">Contract: <span className="font-mono">{gameAddress ?? 'not set'}</span></div>
-        </div>
-        <div className="flex items-center gap-2 mb-3">
-          <span className="text-xs opacity-80">Environment:</span>
-          <div className="mode-toggle flex items-center border border-white/20">
-            <button aria-pressed={env === 'prod'} className={`px-2 py-1 text-xs ${env === 'prod' ? 'bg-white text-black' : ''}`} onClick={() => setEnv('prod')}>Production</button>
-            <button aria-pressed={env === 'staging'} className={`px-2 py-1 text-xs ${env === 'staging' ? 'bg-white text-black' : ''}`} onClick={() => setEnv('staging')}>Staging</button>
+      {/* Admin Controls - visible only to owner */}
+      {isOwner && (
+        <div className="card p-5 animate-in fade-in duration-300">
+          <div className="flex items-center justify-between mb-3">
+            <h4 className="font-semibold text-white">Admin</h4>
           </div>
-        </div>
-        {!isValidContract && (
-          <div className="text-sm text-red-400">The configured contract does not match the game interface. Please set NEXT_PUBLIC_CHAMPION_GAME_{mode === 'celo' ? 'CELO' : 'BASE'} to the PulseChampionGame address.</div>
-        )}
-        {isOwner ? (
+          {!isValidContract && (
+            <div className="text-sm text-red-400">Contract not configured. Set NEXT_PUBLIC_CHAMPION_GAME_{mode === 'celo' ? 'CELO' : 'BASE'} to your PulseChampionGame address.</div>
+          )}
           <div className="space-y-2">
             <p className="text-xs text-gray-400">You are the owner. Chain: {desiredChain.name}</p>
             <p className="text-xs text-gray-400">Active round: {roundActive ? 'Yes' : 'No'}{endTime ? ` • Ends: ${new Date(Number(endTime) * 1000).toLocaleString()}` : ''}</p>
@@ -103,21 +153,113 @@ export function ProfileTab() {
               </Button>
             )}
             <Button
-              disabled={!onDesiredChain || roundActive || !isValidContract}
-              onClick={async () => { try { const hash = await startRound(); if (publicClient && hash) { await publicClient.waitForTransactionReceipt({ hash }); } refresh(); addSuccess('Round started'); } catch (e: any) { addError(e?.message || 'Failed to start'); } }}
+              disabled={roundActive || (onDesiredChain && (!isValidContract || hasContract === false))}
+              onClick={async () => { 
+                try { 
+                  if (!onDesiredChain) { await switchChain({ chainId: desiredChain.id }); }
+                  // after switching, ensure reads refresh
+                  refresh();
+                  const hash = await startRound();
+                  if (!hash) throw new Error('Transaction was not initiated');
+                  if (publicClient) {
+                    await publicClient.waitForTransactionReceipt({ hash });
+                  }
+                  refresh();
+                  addSuccess('Round started'); 
+                } catch (e: any) { addError(e?.message || 'Failed to start'); } 
+              }}
             >
               Start Round
             </Button>
-            <div className="text-xs text-gray-400">
+            <div className="text-xs text-gray-400 space-y-1">
+              <div>Contract: <span className="font-mono">{gameAddress ?? 'not set'}</span></div>
               <div>Owner on chain: <span className="font-mono">{owner}</span></div>
               <div>Your address: <span className="font-mono">{address}</span></div>
-              <div>Status: {onDesiredChain ? 'On correct chain' : 'Wrong chain'}</div>
+              <div>Chain: {desiredChain.name} • Status: {onDesiredChain ? 'On correct chain' : 'Wrong chain'}</div>
+              <button type="button" className="underline" onClick={() => refresh()}>Refresh status</button>
+            </div>
+            {onDesiredChain && hasContract === false && (
+              <div className="text-sm text-red-400 mt-2">No contract code found at this address on {desiredChain.name}. Check NEXT_PUBLIC_CHAMPION_GAME_{mode === 'celo' ? 'CELO' : 'BASE'}.</div>
+            )}
+            <div className="pt-2">
+              <button type="button" className="text-sm underline" onClick={() => setShowVerify((v) => !v)}>
+                {showVerify ? 'Hide Verification' : 'Verify Contract on Celoscan'}
+              </button>
+              {showVerify && (
+                <div className="mt-3 border border-white/10 rounded p-3 space-y-2">
+                  <p className="text-sm text-gray-300">Submit Standard JSON input to Celoscan. You can export this from your Solidity build (Flattened or Standard JSON).</p>
+                  <div className="grid gap-2">
+                    <label className="text-xs opacity-80">Celoscan API Key (optional, else server env used)</label>
+                    <input className="input" value={apiKey} onChange={(e) => setApiKey(e.target.value)} placeholder="VERIFY_API_KEY" />
+                    <label className="text-xs opacity-80">Compiler Version</label>
+                    <input className="input" value={compiler} onChange={(e) => setCompiler(e.target.value)} placeholder="v0.8.20+commit.a1b79de6" />
+                    <label className="text-xs opacity-80">Contract Name (as in metadata)</label>
+                    <input className="input" value={contractName} onChange={(e) => setContractName(e.target.value)} placeholder="contracts/PulseChampionGame.sol:PulseChampionGame or PulseChampionGame" />
+                    <label className="text-xs opacity-80">Standard JSON Input</label>
+                    <textarea className="input" style={{ minHeight: 160 }} value={sourceJson} onChange={(e) => setSourceJson(e.target.value)} placeholder="Paste combined JSON here" />
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Button
+                      variant="secondary"
+                      disabled={verifyBusy || !gameAddress}
+                      onClick={async () => {
+                        setVerifyMsg(null);
+                        setVerifyBusy(true);
+                        try {
+                          const res = await fetch('/api/verify/celo', {
+                            method: 'POST',
+                            headers: { 'content-type': 'application/json' },
+                            body: JSON.stringify({
+                              address: gameAddress,
+                              compiler,
+                              contractName,
+                              codeformat: 'solidity-standard-json-input',
+                              sourceCode: sourceJson,
+                              apiKey: apiKey || undefined,
+                            }),
+                          });
+                          const js = await res.json();
+                          if (!res.ok) throw new Error(js?.error || 'Verification failed');
+                          setVerifyMsg('Verified: ' + (js?.result || 'OK'));
+                        } catch (e: any) {
+                          setVerifyMsg(e?.message || 'Verification failed');
+                        } finally {
+                          setVerifyBusy(false);
+                        }
+                      }}
+                    >
+                      {verifyBusy ? 'Verifying…' : 'Verify Now'}
+                    </Button>
+                    <Button
+                      variant="secondary"
+                      disabled={!gameAddress}
+                      onClick={async () => {
+                        setVerifyMsg(null);
+                        try {
+                          const qs = new URLSearchParams({ address: gameAddress!, apiKey });
+                          const res = await fetch('/api/verify/celo?' + qs.toString());
+                          const js = await res.json();
+                          const result = js?.result?.[0];
+                          if (result && result.SourceCode && String(result.ABI || '').toLowerCase() !== 'contract source code not verified') {
+                            setVerifyMsg('Status: Verified');
+                          } else {
+                            setVerifyMsg('Status: Not verified');
+                          }
+                        } catch (e: any) {
+                          setVerifyMsg(e?.message || 'Check failed');
+                        }
+                      }}
+                    >
+                      Check Status
+                    </Button>
+                  </div>
+                  {verifyMsg && <div className="text-sm mt-1">{verifyMsg}</div>}
+                </div>
+              )}
             </div>
           </div>
-        ) : (
-          <p className="text-sm text-gray-400">Connect the owner wallet to manage rounds.</p>
-        )}
-      </div>
+        </div>
+      )}
 
       {/* Settings Card */}
       <div className="card-floating p-5 animate-in fade-in duration-400">

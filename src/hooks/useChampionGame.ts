@@ -1,21 +1,18 @@
 "use client";
 
 import { useCallback, useMemo, useState, useEffect } from "react";
-import { useAccount, useChainId, useReadContract, useWriteContract } from "wagmi";
+import { useAccount, useChainId, usePublicClient, useReadContract, useWriteContract } from "wagmi";
 import { PulseChampionGameAbi } from "~/lib/abi/PulseChampionGame";
 import { useMode } from "~/components/providers/ModeProvider";
 import { base, celo } from "wagmi/chains";
-import { CHAMPION_GAME_ADDRESSES, CHAMPION_GAME_ADDRESSES_STAGING } from "~/lib/gameAddresses";
-import { useGameEnv } from "~/components/providers/GameEnvProvider";
+import { CHAMPION_GAME_ADDRESSES } from "~/lib/gameAddresses";
 
 export function useChampionGame() {
   const { mode } = useMode();
-  const { env } = useGameEnv();
   const chainId = useChainId();
   const { address } = useAccount();
-  const gameAddress = env === "staging"
-    ? (mode === "celo" ? CHAMPION_GAME_ADDRESSES_STAGING.celo : CHAMPION_GAME_ADDRESSES_STAGING.base)
-    : (mode === "celo" ? CHAMPION_GAME_ADDRESSES.celo : CHAMPION_GAME_ADDRESSES.base);
+  const publicClient = usePublicClient();
+  const gameAddress = mode === "celo" ? CHAMPION_GAME_ADDRESSES.celo : CHAMPION_GAME_ADDRESSES.base;
   const desiredChain = mode === "celo" ? celo : base;
   const onDesiredChain = Number(chainId) === desiredChain.id;
 
@@ -49,7 +46,7 @@ export function useChampionGame() {
     query: { enabled: Boolean(gameAddress && currentRoundId && address) },
   });
 
-  const { writeContract, isPending } = useWriteContract();
+  const { writeContractAsync, isPending } = useWriteContract();
 
   const { data: owner, refetch: refetchOwner } = useReadContract({
     abi: PulseChampionGameAbi,
@@ -59,6 +56,22 @@ export function useChampionGame() {
   });
 
   const isOwner = !!owner && !!address && (owner as string).toLowerCase() === address.toLowerCase();
+
+  // Detect if a contract is actually deployed at the configured address on the current chain
+  const [hasContract, setHasContract] = useState<boolean | null>(null);
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      if (!gameAddress || !publicClient) { setHasContract(null); return; }
+      try {
+        const code = await publicClient.getBytecode({ address: gameAddress });
+        if (!cancelled) setHasContract(Boolean(code));
+      } catch {
+        if (!cancelled) setHasContract(null);
+      }
+    })();
+    return () => { cancelled = true; };
+  }, [gameAddress, publicClient, desiredChain.id, chainId]);
 
   // Last worked hour and countdown helpers
   const { data: lastWorked, refetch: refetchLastWorked } = useReadContract({
@@ -83,25 +96,67 @@ export function useChampionGame() {
   const alreadyWorkedThisHour = currentHourIndex >= 0 && lastHour === currentHourIndex;
   const nextWorkInSec = alreadyWorkedThisHour ? (HOUR - (elapsed % HOUR)) : 0;
 
-  const work = useCallback(() => {
+  const work = useCallback(async () => {
     if (!gameAddress) throw new Error("Game address missing");
-    return writeContract({ abi: PulseChampionGameAbi, address: gameAddress, functionName: "work" });
-  }, [gameAddress, writeContract]);
+    try {
+      if (publicClient && address) {
+        const code = await publicClient.getBytecode({ address: gameAddress });
+        if (!code) throw new Error('No contract found at configured address on this chain');
+        await publicClient.simulateContract({ abi: PulseChampionGameAbi, address: gameAddress, functionName: "work", account: address as `0x${string}` });
+      }
+    } catch (e: any) {
+      throw new Error(e?.shortMessage || e?.cause?.shortMessage || e?.details || e?.message || 'Execution reverted');
+    }
+    return writeContractAsync({ abi: PulseChampionGameAbi, address: gameAddress, functionName: "work" });
+  }, [gameAddress, writeContractAsync, publicClient, address, owner, active]);
 
-  const fund = useCallback((value: bigint) => {
+  const fund = useCallback(async (value: bigint) => {
     if (!gameAddress) throw new Error("Game address missing");
-    return writeContract({ abi: PulseChampionGameAbi, address: gameAddress, functionName: "fundCurrentRound", value });
-  }, [gameAddress, writeContract]);
+    try {
+      if (publicClient && address) {
+        const code = await publicClient.getBytecode({ address: gameAddress });
+        if (!code) throw new Error('No contract found at configured address on this chain');
+        await publicClient.simulateContract({ abi: PulseChampionGameAbi, address: gameAddress, functionName: "fundCurrentRound", account: address as `0x${string}`, value });
+      }
+    } catch (e: any) {
+      throw new Error(e?.shortMessage || e?.cause?.shortMessage || e?.details || e?.message || 'Execution reverted');
+    }
+    return writeContractAsync({ abi: PulseChampionGameAbi, address: gameAddress, functionName: "fundCurrentRound", value });
+  }, [gameAddress, writeContractAsync, publicClient, address]);
 
-  const startRound = useCallback(() => {
+  const startRound = useCallback(async () => {
     if (!gameAddress) throw new Error("Game address missing");
-    return writeContract({ abi: PulseChampionGameAbi, address: gameAddress, functionName: "startRound" });
-  }, [gameAddress, writeContract]);
+    if (owner && address && (owner as string).toLowerCase() !== address.toLowerCase()) {
+      throw new Error('Only the contract owner can start a round');
+    }
+    if (Boolean(active)) {
+      throw new Error('Round already active');
+    }
+    try {
+      if (publicClient && address) {
+        const code = await publicClient.getBytecode({ address: gameAddress });
+        if (!code) throw new Error('No contract found at configured address on this chain');
+        await publicClient.simulateContract({ abi: PulseChampionGameAbi, address: gameAddress, functionName: "startRound", account: address as `0x${string}` });
+      }
+    } catch (e: any) {
+      throw new Error(e?.shortMessage || e?.cause?.shortMessage || e?.details || e?.message || 'Execution reverted');
+    }
+    return writeContractAsync({ abi: PulseChampionGameAbi, address: gameAddress, functionName: "startRound" });
+  }, [gameAddress, writeContractAsync, publicClient, address]);
 
-  const settleRound = useCallback(() => {
+  const settleRound = useCallback(async () => {
     if (!gameAddress || !currentRoundId) throw new Error("Game address or round missing");
-    return writeContract({ abi: PulseChampionGameAbi, address: gameAddress, functionName: "settleRound", args: [currentRoundId] });
-  }, [gameAddress, writeContract, currentRoundId]);
+    try {
+      if (publicClient && address) {
+        const code = await publicClient.getBytecode({ address: gameAddress });
+        if (!code) throw new Error('No contract found at configured address on this chain');
+        await publicClient.simulateContract({ abi: PulseChampionGameAbi, address: gameAddress, functionName: "settleRound", args: [currentRoundId], account: address as `0x${string}` });
+      }
+    } catch (e: any) {
+      throw new Error(e?.shortMessage || e?.cause?.shortMessage || e?.details || e?.message || 'Execution reverted');
+    }
+    return writeContractAsync({ abi: PulseChampionGameAbi, address: gameAddress, functionName: "settleRound", args: [currentRoundId] });
+  }, [gameAddress, writeContractAsync, currentRoundId, publicClient, address]);
 
   return {
     mode,
@@ -134,6 +189,15 @@ export function useChampionGame() {
       try { refetchMyScore?.(); } catch {}
       try { refetchOwner?.(); } catch {}
       try { refetchLastWorked?.(); } catch {}
+      (async () => {
+        try {
+          if (publicClient && gameAddress) {
+            const code = await publicClient.getBytecode({ address: gameAddress });
+            setHasContract(Boolean(code));
+          }
+        } catch {}
+      })();
     },
+    hasContract,
   };
 }

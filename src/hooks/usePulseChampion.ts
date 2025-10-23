@@ -31,21 +31,21 @@ export function usePulseChampion() {
     query: { enabled: ready && Boolean(address) },
   });
 
-  const { writeContract, isPending } = useWriteContract();
+  const { writeContractAsync, isPending } = useWriteContract();
 
   const isOwner = useMemo(() => {
     if (!ownerRead.data || !address) return false;
     return (ownerRead.data as string).toLowerCase() === address.toLowerCase();
   }, [ownerRead.data, address]);
 
-  function awardPoints(to: `0x${string}`, amount: bigint) {
+  async function awardPoints(to: `0x${string}`, amount: bigint) {
     if (!contractAddress) throw new Error("Contract address not set for mode");
-    return writeContract({ abi: PulseChampionAbi, address: contractAddress, functionName: "awardPoints", args: [to, amount] });
+    return writeContractAsync({ abi: PulseChampionAbi, address: contractAddress, functionName: "awardPoints", args: [to, amount] });
   }
 
-  function setPoints(to: `0x${string}`, value: bigint) {
+  async function setPoints(to: `0x${string}`, value: bigint) {
     if (!contractAddress) throw new Error("Contract address not set for mode");
-    return writeContract({ abi: PulseChampionAbi, address: contractAddress, functionName: "setPoints", args: [to, value] });
+    return writeContractAsync({ abi: PulseChampionAbi, address: contractAddress, functionName: "setPoints", args: [to, value] });
   }
 
   return {
@@ -65,4 +65,3 @@ export function usePulseChampion() {
     setPoints,
   };
 }
-

@@ -17,6 +17,7 @@
     "build:raw": "next build",
     "start": "next start",
     "lint": "next lint",
+    "verify:celo": "ts-node scripts/verify-celo.ts",
     "deploy:vercel": "vercel --prod",
     "deploy:raw": "vercel --prod",
     "cleanup": "node scripts/cleanup.js"
