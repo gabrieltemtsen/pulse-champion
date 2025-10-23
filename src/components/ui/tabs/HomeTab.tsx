@@ -67,7 +67,17 @@ export function HomeTab() {
         <Button
           variant="primary"
           disabled={!canWork}
-          onClick={async () => { try { const hash = await work(); if (publicClient && hash) { await publicClient.waitForTransactionReceipt({ hash }); } refresh(); addSuccess('Work confirmed'); } catch (e: any) { addError(e?.message || 'Failed to work'); } }}
+          onClick={async () => {
+            try {
+              const hash = await work();
+              if (!hash) throw new Error('Transaction was not initiated');
+              if (publicClient) {
+                await publicClient.waitForTransactionReceipt({ hash });
+              }
+              refresh();
+              addSuccess('Work confirmed');
+            } catch (e: any) { addError(e?.message || 'Failed to work'); }
+          }}
         >
           Work (once per hour)
         </Button>
@@ -98,7 +108,17 @@ export function HomeTab() {
             variant="secondary"
             className="w-full sm:w-auto"
             disabled={!canDepositFinal}
-            onClick={async () => { try { const hash = await fund(parseEther(fundAmount)); if (publicClient && hash) { await publicClient.waitForTransactionReceipt({ hash }); } refresh(); addSuccess('Deposit confirmed'); } catch (e: any) { addError(e?.message || 'Failed to deposit'); } }}
+            onClick={async () => {
+              try {
+                const hash = await fund(parseEther(fundAmount));
+                if (!hash) throw new Error('Transaction was not initiated');
+                if (publicClient) {
+                  await publicClient.waitForTransactionReceipt({ hash });
+                }
+                refresh();
+                addSuccess('Deposit confirmed');
+              } catch (e: any) { addError(e?.message || 'Failed to deposit'); }
+            }}
           >
             Deposit
           </Button>
@@ -125,7 +145,17 @@ export function HomeTab() {
       <div className="card p-5">
         <Button
           disabled={!canSettle}
-          onClick={async () => { try { const hash = await settleRound(); if (publicClient && hash) { await publicClient.waitForTransactionReceipt({ hash }); } refresh(); addSuccess('Round settled'); } catch (e: any) { addError(e?.message || 'Failed to settle'); } }}
+          onClick={async () => {
+            try {
+              const hash = await settleRound();
+              if (!hash) throw new Error('Transaction was not initiated');
+              if (publicClient) {
+                await publicClient.waitForTransactionReceipt({ hash });
+              }
+              refresh();
+              addSuccess('Round settled');
+            } catch (e: any) { addError(e?.message || 'Failed to settle'); }
+          }}
         >
           Settle Round (anyone)
         </Button>

@@ -169,7 +169,8 @@ export function DashboardTab() {
             onClick={async () => {
               try {
                 const hash = await work();
-                if (publicClient && hash) {
+                if (!hash) throw new Error('Transaction was not initiated');
+                if (publicClient) {
                   await publicClient.waitForTransactionReceipt({ hash });
                 }
                 refresh();
@@ -221,7 +222,7 @@ export function DashboardTab() {
         </div>
 
         <div className="grid grid-cols-1 gap-2 pt-2 border-t border-white/10">
-          <Button disabled={!onDesiredChain || isPending || !currentRoundId || !endTime || Date.now() < Number(endTime) * 1000 || !isValidContract} onClick={async () => { try { const hash = await settleRound(); if (publicClient && hash) { await publicClient.waitForTransactionReceipt({ hash }); } refresh(); addSuccess('Round settled'); } catch (e: any) { addError(e?.message || 'Failed settle'); }}}>Settle Round</Button>
+          <Button disabled={!onDesiredChain || isPending || !currentRoundId || !endTime || Date.now() < Number(endTime) * 1000 || !isValidContract} onClick={async () => { try { const hash = await settleRound(); if (!hash) throw new Error('Transaction was not initiated'); if (publicClient) { await publicClient.waitForTransactionReceipt({ hash }); } refresh(); addSuccess('Round settled'); } catch (e: any) { addError(e?.message || 'Failed settle'); }}}>Settle Round</Button>
         </div>
       </div>
 
