@@ -3,6 +3,7 @@
 import { useChampionGameRounds } from "~/hooks/useChampionGameRounds";
 import { getAddressUrl } from "~/lib/explorers";
 import { useChampionGame } from "~/hooks/useChampionGame";
+import { useFarcasterNames } from "~/hooks/useFarcasterNames";
 
 function format(tsSec: number) {
   if (!tsSec) return "—";
@@ -14,6 +15,7 @@ export function RoundsTab() {
   const { rounds, isLoading } = useChampionGameRounds(10);
   const { desiredChain } = useChampionGame();
   const chainId = desiredChain.id;
+  const { namesByAddress } = useFarcasterNames(rounds.flatMap((r) => r?.topPlayers || []));
   return (
     <div className="px-4 space-y-3" aria-live="polite">
       {isLoading && <div className="spinner h-6 w-6" />}
@@ -36,16 +38,21 @@ export function RoundsTab() {
           <div className="mt-3">
             <p className="text-xs opacity-75 mb-1">Top 3</p>
             <ul className="text-sm space-y-1">
-              {r.topPlayers.map((p, i) => (
-                <li key={i} className="flex justify-between">
-                  <span>
-                    #{i + 1}{' '}{p && p !== '0x0000000000000000000000000000000000000000'
+              {r.topPlayers.map((p, i) => {
+                const lower = (p || '').toLowerCase();
+                const fc = namesByAddress[lower];
+                const content = fc
+                  ? fc
+                  : (p && p !== '0x0000000000000000000000000000000000000000'
                       ? (() => { const url = getAddressUrl(chainId, p as `0x${string}`); const label = `${p.slice(0,6)}…${p.slice(-4)}`; return url ? <a className="underline" href={url} target="_blank" rel="noreferrer">{label}</a> : label; })()
-                      : '—'}
-                  </span>
-                  <span className="font-mono">{String(r.topScores[i] || 0n)}</span>
-                </li>
-              ))}
+                      : '—');
+                return (
+                  <li key={i} className="flex justify-between">
+                    <span>#{i + 1} {content}</span>
+                    <span className="font-mono">{String(r.topScores[i] || 0n)}</span>
+                  </li>
+                );
+              })}
             </ul>
           </div>
         </div> : null

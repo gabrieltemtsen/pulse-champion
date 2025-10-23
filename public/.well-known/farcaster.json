@@ -1,0 +1,22 @@
+{
+  "accountAssociation": {
+    "header": "eyJmaWQiOjQyMDU2NCwidHlwZSI6ImF1dGgiLCJrZXkiOiIweGJFOTViYjQ3Nzg5RTVmNEFmNDY3MzA2Qzk3REVEMDg3N0JGODE3QjUifQ",
+    "payload": "eyJkb21haW4iOiJwdWxzZS1jaGFtcGlvbi52ZXJjZWwuYXBwIn0",
+    "signature": "saz9ZHyO210yl06tH/4jlVYza1rGHUZIKRJt5XYjw+g8EdfuHi5XXnqYdryetMYCSMHJEVBsMnagN170GEWT+xw="
+  },
+  "miniapp": {
+    "version": "1",
+    "name": "pulse-champion",
+    "homeUrl": "https://pulse-champion.vercel.app",
+    "iconUrl": "https://pulse-champion.vercel.app/icon.png",
+    "imageUrl": "https://pulse-champion.vercel.app/api/opengraph-image",
+    "buttonTitle": "launch pulse",
+    "splashImageUrl": "https://pulse-champion.vercel.app/splash.png",
+    "splashBackgroundColor": "#f7f7f7",
+    "webhookUrl": "https://pulse-champion.vercel.app/api/webhook"
+  },
+  "baseBuilder": {
+    "ownerAddress": "0x06329049fB0aa569Be8D1b781Cf1753f371Bb76C"
+  }
+}
+

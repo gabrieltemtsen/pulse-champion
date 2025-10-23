@@ -3,12 +3,14 @@
 import { useChampionGameRounds } from "~/hooks/useChampionGameRounds";
 import { getAddressUrl } from "~/lib/explorers";
 import { useChampionGame } from "~/hooks/useChampionGame";
+import { useFarcasterNames } from "~/hooks/useFarcasterNames";
 
 export function RewardsTab() {
   const { rounds, isLoading } = useChampionGameRounds(10);
   const { desiredChain } = useChampionGame();
   const chainId = desiredChain.id;
   const settled = rounds.filter((r) => r && r.settled);
+  const { namesByAddress } = useFarcasterNames(rounds.flatMap((r) => r?.topPlayers || []));
 
   return (
     <div className="px-4 space-y-6">
@@ -38,16 +40,21 @@ export function RewardsTab() {
               <div className="mt-3">
                 <p className="text-xs opacity-75 mb-1">Winners</p>
                 <ul className="text-sm space-y-1">
-                  {r.topPlayers.map((p, i) => (
-                    <li key={i} className="flex justify-between">
-                      <span>
-                        #{i + 1}{' '}{p && p !== '0x0000000000000000000000000000000000000000'
+                  {r.topPlayers.map((p, i) => {
+                    const lower = (p || '').toLowerCase();
+                    const fc = namesByAddress[lower];
+                    const content = fc
+                      ? fc
+                      : (p && p !== '0x0000000000000000000000000000000000000000'
                           ? (() => { const url = getAddressUrl(chainId, p as `0x${string}`); const label = `${p.slice(0,6)}…${p.slice(-4)}`; return url ? <a className="underline" href={url} target="_blank" rel="noreferrer">{label}</a> : label; })()
-                          : '—'}
-                      </span>
-                      <span className="font-mono">{Number(formatEther(amounts[i])).toLocaleString(undefined, { maximumFractionDigits: 4 })} {desiredChain.nativeCurrency.symbol}</span>
-                    </li>
-                  ))}
+                          : '—');
+                    return (
+                      <li key={i} className="flex justify-between">
+                        <span>#{i + 1} {content}</span>
+                        <span className="font-mono">{Number(formatEther(amounts[i])).toLocaleString(undefined, { maximumFractionDigits: 4 })} {desiredChain.nativeCurrency.symbol}</span>
+                      </li>
+                    );
+                  })}
                 </ul>
               </div>
             </div>

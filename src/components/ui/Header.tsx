@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { APP_NAME } from "~/lib/constants";
 import sdk from "@farcaster/miniapp-sdk";
 import { useMiniApp } from "@neynar/react";
@@ -17,6 +17,17 @@ export function Header({ neynarUser }: HeaderProps) {
   const { context } = useMiniApp();
   const [isUserDropdownOpen, setIsUserDropdownOpen] = useState(false);
   const { mode, setMode } = useMode();
+  const [showBanner, setShowBanner] = useState(true);
+  useEffect(() => {
+    try {
+      const v = localStorage.getItem('pc_testing_banner_dismissed');
+      if (v === '1') setShowBanner(false);
+    } catch {}
+  }, []);
+  const dismissBanner = () => {
+    setShowBanner(false);
+    try { localStorage.setItem('pc_testing_banner_dismissed', '1'); } catch {}
+  };
 
   return (
     <div className="relative">
@@ -63,6 +74,13 @@ export function Header({ neynarUser }: HeaderProps) {
           )}
           </div>
         </div>
+        {/* Testing Banner */}
+        {showBanner && (
+          <div className="mt-2 px-3 py-2 rounded bg-yellow-400/20 text-yellow-100 border border-yellow-300/30 text-xs flex items-center justify-between">
+            <span>We’re in the final stages of testing. Thanks for your patience!</span>
+            <button type="button" className="ml-3 text-yellow-100/80 hover:text-yellow-100 focus-ring rounded" onClick={dismissBanner} aria-label="Dismiss testing notice">✕</button>
+          </div>
+        )}
       </div>
       {context?.user && isUserDropdownOpen && (
         <div className="absolute top-full right-4 z-50 w-fit mt-1 bg-white/95 dark:bg-gray-800/95 rounded-lg shadow-lg border border-gray-200/60 dark:border-gray-700/60 backdrop-blur supports-[backdrop-filter]:backdrop-blur-sm">
