@@ -46,7 +46,7 @@ export function useChampionGame() {
     query: { enabled: Boolean(gameAddress && currentRoundId && address) },
   });
 
-  const { writeContract, isPending } = useWriteContract();
+  const { writeContractAsync, isPending } = useWriteContract();
 
   const { data: owner, refetch: refetchOwner } = useReadContract({
     abi: PulseChampionGameAbi,
@@ -107,8 +107,8 @@ export function useChampionGame() {
     } catch (e: any) {
       throw new Error(e?.shortMessage || e?.cause?.shortMessage || e?.details || e?.message || 'Execution reverted');
     }
-    return writeContract({ abi: PulseChampionGameAbi, address: gameAddress, functionName: "work" });
-  }, [gameAddress, writeContract, publicClient, address, owner, active]);
+    return writeContractAsync({ abi: PulseChampionGameAbi, address: gameAddress, functionName: "work" });
+  }, [gameAddress, writeContractAsync, publicClient, address, owner, active]);
 
   const fund = useCallback(async (value: bigint) => {
     if (!gameAddress) throw new Error("Game address missing");
@@ -121,8 +121,8 @@ export function useChampionGame() {
     } catch (e: any) {
       throw new Error(e?.shortMessage || e?.cause?.shortMessage || e?.details || e?.message || 'Execution reverted');
     }
-    return writeContract({ abi: PulseChampionGameAbi, address: gameAddress, functionName: "fundCurrentRound", value });
-  }, [gameAddress, writeContract, publicClient, address]);
+    return writeContractAsync({ abi: PulseChampionGameAbi, address: gameAddress, functionName: "fundCurrentRound", value });
+  }, [gameAddress, writeContractAsync, publicClient, address]);
 
   const startRound = useCallback(async () => {
     if (!gameAddress) throw new Error("Game address missing");
@@ -141,8 +141,8 @@ export function useChampionGame() {
     } catch (e: any) {
       throw new Error(e?.shortMessage || e?.cause?.shortMessage || e?.details || e?.message || 'Execution reverted');
     }
-    return writeContract({ abi: PulseChampionGameAbi, address: gameAddress, functionName: "startRound" });
-  }, [gameAddress, writeContract, publicClient, address]);
+    return writeContractAsync({ abi: PulseChampionGameAbi, address: gameAddress, functionName: "startRound" });
+  }, [gameAddress, writeContractAsync, publicClient, address]);
 
   const settleRound = useCallback(async () => {
     if (!gameAddress || !currentRoundId) throw new Error("Game address or round missing");
@@ -155,8 +155,8 @@ export function useChampionGame() {
     } catch (e: any) {
       throw new Error(e?.shortMessage || e?.cause?.shortMessage || e?.details || e?.message || 'Execution reverted');
     }
-    return writeContract({ abi: PulseChampionGameAbi, address: gameAddress, functionName: "settleRound", args: [currentRoundId] });
-  }, [gameAddress, writeContract, currentRoundId, publicClient, address]);
+    return writeContractAsync({ abi: PulseChampionGameAbi, address: gameAddress, functionName: "settleRound", args: [currentRoundId] });
+  }, [gameAddress, writeContractAsync, currentRoundId, publicClient, address]);
 
   return {
     mode,
