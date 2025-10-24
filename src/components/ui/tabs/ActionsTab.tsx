@@ -13,13 +13,13 @@ import { APP_URL } from '~/lib/constants';
  *
  * This component provides the main interaction interface for users to:
  * - Share the mini app with others
- * - Sign in with Farcaster
+ * - Sign in
  * - Send notifications to their account
  * - Trigger haptic feedback
  * - Add the mini app to their client
  * - Copy share URLs
  *
- * The component uses the useMiniApp hook to access Farcaster context and actions.
+ * The component uses the useMiniApp hook to access app context and actions.
  * All state is managed locally within this component.
  *
  * @example
@@ -42,13 +42,8 @@ export function ActionsTab() {
 
   // --- Handlers ---
   /**
-   * Sends a notification to the current user's Farcaster account.
-   *
-   * This function makes a POST request to the /api/send-notification endpoint
-   * with the user's FID and notification details. It handles different response
-   * statuses including success (200), rate limiting (429), and errors.
-   *
-   * @returns Promise that resolves when the notification is sent or fails
+   * Sends a notification to the current user's account (if supported by the host client).
+   * Uses the server route to deliver notifications where available.
    */
   const sendFarcasterNotification = useCallback(async () => {
     setNotificationState((prev) => ({ ...prev, sendStatus: '' }));

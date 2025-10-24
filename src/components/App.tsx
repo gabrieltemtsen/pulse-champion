@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useMiniApp } from "@neynar/react";
 import { Header } from "~/components/ui/Header";
 import { Footer } from "~/components/ui/Footer";
@@ -13,6 +13,7 @@ import { RoundsTab } from "~/components/ui/tabs/RoundsTab";
 import { RewardsTab } from "~/components/ui/tabs/RewardsTab";
 import { ProfileTab } from "~/components/ui/tabs/ProfileTab";
 import { TopSummaryBar } from "~/components/ui/TopSummaryBar";
+import { OnboardingModal } from "~/components/ui/OnboardingModal";
 
 // --- Types ---
 export enum Tab {
@@ -74,6 +75,7 @@ export default function App(
 
   // --- Neynar user hook ---
   const { user: neynarUser } = useNeynarUser(context || undefined);
+  const [showOnboarding, setShowOnboarding] = useState(false);
 
   // --- Effects ---
   /**
@@ -86,6 +88,10 @@ export default function App(
   useEffect(() => {
     if (isSDKLoaded) {
       setInitialTab(Tab.Dashboard);
+      try {
+        const v = localStorage.getItem('pc_onboarding_done');
+        if (v !== '1') setShowOnboarding(true);
+      } catch {}
     }
   }, [isSDKLoaded, setInitialTab]);
 
@@ -113,6 +119,10 @@ export default function App(
     >
       {/* Header should be full width */}
       <Header neynarUser={neynarUser} />
+      <OnboardingModal
+        open={showOnboarding}
+        onClose={() => { setShowOnboarding(false); try { localStorage.setItem('pc_onboarding_done', '1'); } catch {} }}
+      />
       {currentTab !== Tab.Home && <TopSummaryBar />}
 
       {/* Main content and footer should be centered */}
