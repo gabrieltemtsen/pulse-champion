@@ -17,10 +17,11 @@ type HeaderProps = {
 };
 
 export function Header({ neynarUser }: HeaderProps) {
-  const { context } = useMiniApp();
+  const { context, actions, added } = useMiniApp();
   const [isUserDropdownOpen, setIsUserDropdownOpen] = useState(false);
   const { mode, setMode } = useMode();
   const [showBanner, setShowBanner] = useState(true);
+  const [showAddBanner, setShowAddBanner] = useState(true);
   const { isConnected } = useAccount();
   const chainId = useChainId();
   const desiredChain = mode === "celo" ? celo : base;
@@ -35,6 +36,18 @@ export function Header({ neynarUser }: HeaderProps) {
   const dismissBanner = () => {
     setShowBanner(false);
     try { localStorage.setItem('pc_testing_banner_dismissed', '1'); } catch {}
+  };
+
+  // Dismiss state for Add Mini App banner
+  useEffect(() => {
+    try {
+      const v = localStorage.getItem('pc_add_banner_dismissed');
+      if (v === '1') setShowAddBanner(false);
+    } catch {}
+  }, []);
+  const dismissAddBanner = () => {
+    setShowAddBanner(false);
+    try { localStorage.setItem('pc_add_banner_dismissed', '1'); } catch {}
   };
 
   return (
@@ -108,6 +121,23 @@ export function Header({ neynarUser }: HeaderProps) {
             >
               {isSwitching ? 'Switching…' : `Switch to ${desiredChain.name}`}
             </Button>
+          </div>
+        )}
+
+        {/* Add Mini App Banner (Farcaster clients only) */}
+        {context?.client && !added && showAddBanner && (
+          <div className="mt-2 px-3 py-2 rounded bg-blue-500/15 text-blue-100 border border-blue-400/30 text-xs flex items-center justify-between">
+            <span>Add Pulse Champion to your Farcaster client for faster access.</span>
+            <div className="flex items-center gap-2">
+              <Button
+                variant="secondary"
+                size="sm"
+                onClick={() => actions.addMiniApp()}
+              >
+                Add Mini App
+              </Button>
+              <button type="button" className="ml-1 text-blue-100/80 hover:text-blue-100 focus-ring rounded" onClick={dismissAddBanner} aria-label="Dismiss add mini app notice">✕</button>
+            </div>
           </div>
         )}
       </div>
