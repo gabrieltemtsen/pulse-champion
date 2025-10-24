@@ -29,29 +29,36 @@ export function useFarcasterNames(addresses: (string | undefined)[] | undefined)
     let cancelled = false;
     setLoading(true);
     setError(null);
-    const qs = new URLSearchParams({ addresses: addrs.join(",") }).toString();
-    fetch(`/api/users?${qs}`)
-      .then((res) => res.json())
-      .then((data: { users?: User[] }) => {
-        if (cancelled) return;
-        const next: Record<string, string> = {};
-        for (const u of data.users || []) {
-          const label = u.username ? `@${u.username}` : (u.display_name || "");
-          if (!label) continue;
-          const eth = u.verified_addresses?.eth_addresses || [];
-          const custody = u.custody_address ? [u.custody_address] : [];
-          for (const a of [...eth, ...custody]) {
-            if (!a) continue;
-            next[a.toLowerCase()] = label;
-          }
+    (async () => {
+      const next: Record<string, string> = {};
+      const chunkSize = 20;
+      try {
+        for (let i = 0; i < addrs.length; i += chunkSize) {
+          if (cancelled) break;
+          const chunk = addrs.slice(i, i + chunkSize);
+          const results = await Promise.allSettled(
+            chunk.map(async (addr) => {
+              try {
+                const res = await fetch(`/api/farcaster/username?address=${addr}`);
+                if (!res.ok) return;
+                const data: { username?: string | null } = await res.json();
+                if (data?.username) {
+                  next[addr] = `@${data.username}`;
+                }
+              } catch {}
+            })
+          );
+          // noop; iterate next chunk
         }
-        setMap(next);
-      })
-      .catch((e) => !cancelled && setError(e?.message || "Failed to load usernames"))
-      .finally(() => !cancelled && setLoading(false));
+        if (!cancelled) setMap(next);
+      } catch (e: any) {
+        if (!cancelled) setError(e?.message || 'Failed to load usernames');
+      } finally {
+        if (!cancelled) setLoading(false);
+      }
+    })();
     return () => { cancelled = true; };
   }, [addrs.join(",")]);
 
   return { namesByAddress: map, loading, error };
 }
-
