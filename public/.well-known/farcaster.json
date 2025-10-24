@@ -13,7 +13,8 @@
     "buttonTitle": "launch pulse",
     "splashImageUrl": "https://pulse-champion.vercel.app/splash.png",
     "splashBackgroundColor": "#f7f7f7",
-    "webhookUrl": "https://pulse-champion.vercel.app/api/webhook"
+    "webhookUrl": "https://api.neynar.com/f/app/dacc1a0c-b7f4-47f6-8cbd-28d45681de18/event",
+    "tags": ["game", "finance", "fun"]
   },
   "baseBuilder": {
     "ownerAddress": "0x06329049fB0aa569Be8D1b781Cf1753f371Bb76C"
