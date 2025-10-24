@@ -124,17 +124,17 @@ export function Header({ neynarUser }: HeaderProps) {
           </div>
         )}
 
-        {/* Add Mini App Banner (Farcaster clients only) */}
+        {/* Add Mini App Banner (client hosts only) */}
         {context?.client && !added && showAddBanner && (
           <div className="mt-2 px-3 py-2 rounded bg-blue-500/15 text-blue-100 border border-blue-400/30 text-xs flex items-center justify-between">
-            <span>Add Pulse Champion to your Farcaster client for faster access.</span>
+            <span>Add Pulse Champion to your client for faster access.</span>
             <div className="flex items-center gap-2">
               <Button
                 variant="secondary"
                 size="sm"
                 onClick={() => actions.addMiniApp()}
               >
-                Add Mini App
+                Add App
               </Button>
               <button type="button" className="ml-1 text-blue-100/80 hover:text-blue-100 focus-ring rounded" onClick={dismissAddBanner} aria-label="Dismiss add mini app notice">✕</button>
             </div>

@@ -105,7 +105,7 @@ function ConnectionControls({
           }}
           className="w-full"
         >
-          Connect Farcaster (Manual)
+          Connect (Manual)
         </Button>
       </div>
     );

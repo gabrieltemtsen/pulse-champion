@@ -72,7 +72,7 @@ export function LeaderboardTab() {
                       return '—';
                     })()}
                   </p>
-                  <p className="text-xs text-gray-300">{namesByAddress[p.address?.toLowerCase() || ''] ? 'Farcaster' : 'Address'}</p>
+                  <p className="text-xs text-gray-300">{namesByAddress[p.address?.toLowerCase() || ''] ? 'Handle' : 'Address'}</p>
                 </div>
               </div>
               
