@@ -14,7 +14,7 @@ export type LeaderboardEntry = { address: `0x${string}`; score: bigint };
  */
 export function useRoundLeaderboard(initialPageSize = 50) {
   const publicClient = usePublicClient();
-  const { gameAddress, currentRoundId, topPlayers, topScores } = useChampionGame();
+  const { gameAddress, currentRoundId, topPlayers, topScores, startTime, desiredChain } = useChampionGame();
   const [entries, setEntries] = useState<LeaderboardEntry[]>([]);
   const [allAddrs, setAllAddrs] = useState<`0x${string}`[]>([]);
   const [cursor, setCursor] = useState(0);
@@ -34,8 +34,21 @@ export function useRoundLeaderboard(initialPageSize = 50) {
       setLoadingAddrs(true);
       setError(null);
       try {
+        // Heuristic: determine a reasonable fromBlock near round start to avoid overly wide queries
+        let fromBlock: bigint = 0n;
+        try {
+          const latest = await publicClient.getBlockNumber();
+          const start = Number(startTime || 0n);
+          if (start > 0) {
+            const now = Math.floor(Date.now() / 1000);
+            const diffSec = Math.max(0, now - start);
+            const avgSecPerBlock = desiredChain?.id === 42220 ? 5 : 2; // Celo ~5s, Base ~2s (rough)
+            const approxBlocks = BigInt(Math.ceil(diffSec / avgSecPerBlock) + 20000); // buffer
+            fromBlock = latest > approxBlocks ? latest - approxBlocks : 0n;
+          }
+        } catch {}
         const event = parseAbiItem('event Worked(uint256 indexed id, address indexed player, uint32 hourIndex, uint256 points, uint256 newTotal)');
-        const logs = await publicClient.getLogs({ address: gameAddress, event, args: { id: currentRoundId }, fromBlock: 0n });
+        const logs = await publicClient.getLogs({ address: gameAddress, event, args: { id: currentRoundId }, fromBlock });
         const seen = new Set<string>();
         const addrs: `0x${string}`[] = [];
         for (const l of logs) {
