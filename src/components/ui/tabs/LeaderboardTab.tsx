@@ -6,12 +6,13 @@ import { getAddressUrl } from "~/lib/explorers";
 import { useMode } from "~/components/providers/ModeProvider";
 import { useAccount } from "wagmi";
 import { useFarcasterNames } from "~/hooks/useFarcasterNames";
+import { useRoundLeaderboard } from "~/hooks/useRoundLeaderboard";
 
 export function LeaderboardTab() {
   const { address } = useAccount();
-  const { topPlayers, topScores, myScore, desiredChain } = useChampionGame();
+  const { myScore, desiredChain } = useChampionGame();
   const chainId = desiredChain.id;
-  const entries = topPlayers.map((p, i) => ({ address: p, score: topScores[i] ?? 0n }));
+  const { entries, loading, hasMore, loadMore } = useRoundLeaderboard(50);
   const { namesByAddress } = useFarcasterNames(entries.map(e => e.address));
 
   return (
@@ -21,8 +22,20 @@ export function LeaderboardTab() {
         <h2 className="text-2xl font-bold text-white mb-2 glow-effect">Leaderboard</h2>
         <p className="text-gray-300">Top champions this round</p>
       </div>
+      <div className="flex justify-center">
+        {hasMore && (
+          <button
+            type="button"
+            className="btn btn-secondary px-4 py-2"
+            onClick={() => loadMore(50)}
+            disabled={loading}
+          >
+            {loading ? 'Loading…' : 'Load more'}
+          </button>
+        )}
+      </div>
 
-      {/* Top 3 with Floating Cards */}
+      {/* Leaderboard List */}
       <div className="space-y-3">
         {entries.map((p, i) => (
           <div 
@@ -77,6 +90,9 @@ export function LeaderboardTab() {
             <div className="absolute inset-0 rounded-[var(--border-radius-organic)] opacity-0 hover:opacity-20 transition-opacity duration-300 bg-gradient-to-r from-blue-400 to-cyan-400 pointer-events-none" />
           </div>
         ))}
+        {loading && (
+          <div className="text-center text-xs opacity-70">Loading leaderboard…</div>
+        )}
       </div>
 
       {/* My score */}
